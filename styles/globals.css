@@ -35,3 +35,36 @@ h1 {
 .game-text {
   font-family: 'Heading';
 }
+
+@import url(https://fonts.googleapis.com/css?family=Bangers);
+/* 
+body{
+  background:#fff;
+  font-family: 'Bangers', cursive;
+  font-size: 25px;
+} */
+
+.box{
+  background:#fff;
+  border: solid black;
+  border-color: black;
+  float:left; 
+}
+
+.boxNoColor{
+  background:#fff;
+  border: solid transparent;
+  border-color: transparent;
+  float:left; 
+}
+
+.box1{
+  border-width: 3px 4px 3px 5px;
+  border-radius:95% 4% 92% 5%/4% 95% 6% 95%;
+  transform: rotate(2deg);
+}
+
+.oddboxinner{
+  margin:15px;
+  transform: rotate(-2deg);
+}
