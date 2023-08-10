@@ -4,8 +4,19 @@ import ChainLogo from '@/components/ChainLogo';
 
 import '../styles/Home.module.css';
 import GameCard from '@/components/GameCard';
+import { useAccount } from 'wagmi';
+import Dashboard from '@/components/Dashboard/Dashboard';
 
 export default function Home() {
+
+  const { address, isConnected } = useAccount()
+
+  const isLoggedIn = isConnected && address
+
+  if (isLoggedIn) {
+    return <Dashboard />
+  }
+
   return <>
     <Head>
       <title>Storylok | Explore the world unkown to others | GenAI x NFT Based Game</title>
@@ -26,6 +37,7 @@ export default function Home() {
         </h2>
       </div>
     </div>
+
     {/* Carousel of NFTs */}
     <div className='flex flex-row place-content-evenly'>
       <Marquee style={{ overflowY: 'hidden' }} className='flex flex-2' pauseOnHover>

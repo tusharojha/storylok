@@ -1,7 +1,7 @@
 import Link from "next/link"
+import { ConnectButton } from '@rainbow-me/rainbowkit';
 
 const Header = () => {
-
   return <div className="navbar flex flex-1 justify-center p-4 z-50 bg-white w-full fixed top-0">
     <div className="flex-1">
       <div className="w-full">
@@ -9,7 +9,8 @@ const Header = () => {
         <p className="pt-2 text-sm">Lok is a Sanskrit term meaning "a particular division of the universe." </p>
       </div>
     </div>
-    <div className="flex-none">  
+    <div className="flex-none">
+      <ConnectButton />
     </div>
   </div>
 }
