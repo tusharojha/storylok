@@ -44,27 +44,38 @@ body{
   font-size: 25px;
 } */
 
-.box{
-  background:#fff;
+.box {
+  background: #fff;
   border: solid black;
   border-color: black;
-  float:left; 
+  float: left;
 }
 
-.boxNoColor{
-  background:#fff;
+.boxNoColor {
+  background: #fff;
   border: solid transparent;
   border-color: transparent;
-  float:left; 
+  float: left;
 }
 
-.box1{
+.box1 {
   border-width: 3px 4px 3px 5px;
-  border-radius:95% 4% 92% 5%/4% 95% 6% 95%;
+  border-radius: 95% 4% 92% 5%/4% 95% 6% 95%;
   transform: rotate(2deg);
 }
 
-.oddboxinner{
-  margin:15px;
+.oddboxinner {
+  margin: 15px;
   transform: rotate(-2deg);
+}
+
+.progress-7 {
+  width: 100%;
+  height: 24px;
+  -webkit-mask:
+    radial-gradient(circle closest-side, #000 94%, #0000) 0 0/25% 100%,
+    linear-gradient(#000 0 0) center/calc(100% - 12px) calc(100% - 12px) no-repeat;
+  background:
+    linear-gradient(#25b09b 0 0) 0/0% no-repeat #ddd;
+  transition: 2s linear;
 }
