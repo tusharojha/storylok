@@ -18,9 +18,12 @@
     "axios": "^1.4.0",
     "eslint": "8.47.0",
     "eslint-config-next": "13.4.13",
+    "ethers": "^6.7.0",
+    "fs": "^0.0.1-security",
     "lodash": "^4.17.21",
     "lodash.merge": "^4.6.2",
     "next": "13.4.13",
+    "nft.storage": "^7.1.1",
     "openai": "^3.3.0",
     "postcss": "8.4.27",
     "react": "18.2.0",
@@ -33,6 +36,7 @@
     "wagmi": "^1.3.10"
   },
   "devDependencies": {
-    "@types/lodash.merge": "^4.6.7"
+    "@types/lodash.merge": "^4.6.7",
+    "@types/react-modal": "^3.16.0"
   }
 }

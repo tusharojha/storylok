@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Configuration, OpenAIApi } from "openai";
 
 const configuration = new Configuration({
@@ -90,4 +91,17 @@ export const createImage = async (prompt: string) => {
   })
   console.log(response.data.data[0])
   return response.data.data[0].url
+}
+
+export async function getImageData(url: string) {
+  try {
+    const response = await axios.post('/api/getImage', {
+      url: url
+    });
+    console.log('response', response.data)
+    console.log(response.data);
+    return response.data
+  } catch (error) {
+    console.error('Error fetching file:', error);
+  }
 }

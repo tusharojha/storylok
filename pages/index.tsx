@@ -4,12 +4,15 @@ import ChainLogo from '@/components/ChainLogo';
 
 import '../styles/Home.module.css';
 import GameCard from '@/components/GameCard';
-import { useAccount } from 'wagmi';
+import { useAccount, useNetwork } from 'wagmi';
 import Dashboard from '@/components/Dashboard/Dashboard';
 
 export default function Home() {
 
   const { address, isConnected } = useAccount()
+  const { chain } = useNetwork()
+
+  console.log('chain', chain?.rpcUrls.default)
 
   const isLoggedIn = isConnected && address
 

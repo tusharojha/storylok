@@ -9,7 +9,6 @@ import { publicProvider } from 'wagmi/providers/public'
 import merge from 'lodash.merge';
 import { RainbowKitProvider, Theme, getDefaultWallets, lightTheme, midnightTheme } from '@rainbow-me/rainbowkit'
 
-
 function MyApp({ Component, pageProps }: AppProps) {
   const { chains, publicClient } = configureChains(
     [optimismGoerli, zoraTestnet, baseGoerli, modeTestnet],
@@ -32,6 +31,7 @@ function MyApp({ Component, pageProps }: AppProps) {
       <RainbowKitProvider chains={chains}>
         <Header />
         <Component {...pageProps} />
+        <div id="modal" />
       </RainbowKitProvider>
     </WagmiConfig>
   </>
