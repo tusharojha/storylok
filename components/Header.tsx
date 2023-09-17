@@ -1,5 +1,11 @@
+import dynamic from "next/dynamic";
 import Link from "next/link"
-import { ConnectButton } from '@rainbow-me/rainbowkit';
+
+const WalletMultiButtonDynamic = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+);
+
 
 const Header = () => {
   return <div className="navbar flex flex-1 justify-center p-4 z-50 bg-white w-full fixed top-0">
@@ -10,7 +16,7 @@ const Header = () => {
       </div>
     </div>
     <div className="flex-none">
-      <ConnectButton />
+      <WalletMultiButtonDynamic />
     </div>
   </div>
 }

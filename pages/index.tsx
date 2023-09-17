@@ -4,17 +4,13 @@ import ChainLogo from '@/components/ChainLogo';
 
 import '../styles/Home.module.css';
 import GameCard from '@/components/GameCard';
-import { useAccount, useNetwork } from 'wagmi';
 import Dashboard from '@/components/Dashboard/Dashboard';
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function Home() {
+  const { publicKey } = useWallet()
 
-  const { address, isConnected } = useAccount()
-  const { chain } = useNetwork()
-
-  console.log('chain', chain?.rpcUrls.default)
-
-  const isLoggedIn = isConnected && address
+  const isLoggedIn = publicKey != null
 
   if (isLoggedIn) {
     return <Dashboard />
@@ -29,15 +25,8 @@ export default function Home() {
     <div className='flex flex-col flex-1 h-[70vh] justify-center items-center'>
       <div className='flex flex-1 justify-center items-center flex-col'>
         <h1 className='text-4xl font-bold text-center text-black leading-relaxed'>Unleash Your Imagination, Forge Your Storyline, Collect NFT Memories!</h1>
-        <h2 className='text-xl text-black font-bold flex flex-row items-center mt-2'>
-          powered by GenAI & Web3
-          <div className='ml-2 flex flex-row'>
-            <ChainLogo chain='astarTestnet' />
-            <ChainLogo chain='optimism' />
-            <ChainLogo chain='base' />
-            <ChainLogo chain='zora' />
-            <ChainLogo chain='mode' />
-          </div>
+        <h2 className='text-xl text-black font-bold flex flex-row items-center justify-center mt-2'>
+          powered by GenAI & <span><img className="mb-2 mx-0" alt="NFT Image" height={50} width={150} src={'/logos/solana.png'} /></span>
         </h2>
       </div>
     </div>

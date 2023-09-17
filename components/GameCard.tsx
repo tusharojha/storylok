@@ -18,7 +18,6 @@ export default function GameCard(props: GameCardProps) {
         <img className="boxNoColor box1 mb-2 mx-0" alt="NFT Image" height={300} width={260} src={nftImage} />
         <h1 className="font-bold w-[260px]">{title}</h1>
         <div className="flex flex-row flex-1 items-center">
-          <ChainLogo size={20} chain={chain} />
           <h2 className="ml-2 mt-1 text-xs">{address.slice(0, 3)}...{address.slice(address.length - 4, address.length - 1)}</h2>
         </div>
       </div>

@@ -5,10 +5,15 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { continueStory, createImage, createImagePrompt, getImageData, startNewStory } from "../helpers/story";
 import { ChatMessage } from "../helpers/types";
 import Modal from 'react-modal';
-import { getLatestTokenId, prepareNftMetadata, sendTxOnChain } from "../helpers/contract";
+import { getLatestTokenId, mintNftOnWallet, prepareNftMetadata, sendTxOnChain } from "../helpers/contract";
 import { useAccount, usePublicClient, useSignMessage, useNetwork } from "wagmi";
 import { ChainDetails, getOpenseaUrl } from "../ChainLogo";
 import { NFTStorage } from 'nft.storage'
+import { useWallet } from "@solana/wallet-adapter-react";
+import * as ed from '@noble/ed25519'
+import { sha512 } from "@noble/hashes/sha512";
+ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
+
 
 const customStyles = {
   content: {
@@ -26,10 +31,7 @@ Modal.setAppElement('#modal');
 
 export default function Gameplay() {
 
-  const { address } = useAccount()
-  const { data, error, isLoading, signMessage, variables } = useSignMessage()
-
-  const { chain } = useNetwork()
+  const { publicKey, disconnect, signMessage } = useWallet()
 
   const [loading, setLoading] = useState(false)
   const [userCommand, setUserCommand] = useState('')
@@ -38,7 +40,7 @@ export default function Gameplay() {
   const [conversation, setConversation] = useState<ChatMessage[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
 
-  const publicClient = usePublicClient()
+  const [mint, setMint] = useState()
   const [baseline, setBaseline] = useState(
     {
       title: '',
@@ -62,28 +64,62 @@ export default function Gameplay() {
   const divRef = useRef(null);
 
   const mintNftOnChain = async () => {
-    if (!address || isLoading) return;
-
-    signMessage({ message: `Hi from Storylok, I am confirming to mint my progress for the story with title ${baseline.title} at ${Date.now()}` })
+    if (!publicKey || loading) return;
     try {
       setLoading(true)
-      // Prepare NFT Metadata.
-      const cid = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary)
-      const rpc = chain?.rpcUrls.default.http[0] ?? ChainDetails['optimism'].rpc
-      const txHash = await sendTxOnChain(rpc, address, cid)
 
-      if (txHash) {
-        const latestTokenId = await getLatestTokenId(rpc)
-        console.log(latestTokenId)
-        if (chain?.id === 81) {
-          window.open(`https://shibuya.subscan.io/extrinsic/${txHash}`, '_blank')
-        }
-        window.open(getOpenseaUrl(rpc, ''), '_blank')
+      // Request message signing from the user.
+      // `publicKey` will be null if the wallet isn't connected
+      if (!publicKey) throw new Error('Wallet not connected!');
+      // `signMessage` will be undefined if the wallet doesn't support it
+      if (!signMessage) throw new Error('Wallet does not support message signing!');
+      // Encode anything as bytes
+      const msg = 'You are authenticating to mint the Storylok NFT on your wallet.'
+      const message = new TextEncoder().encode(msg);
+      // Sign the bytes using the wallet
+      const signature = await signMessage(message);
+      // Verify that the bytes were signed using the private key that matches the known public key
+      if (!ed.verify(signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
+
+
+      // Prepare NFT Metadata.
+      const data = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary)
+
+
+      const mint = await mintNftOnWallet(publicKey.toString(), data.description, data.image, data.name)
+
+      if (!mint) {
         setLoading(false)
-        closeModal()
+        alert('Error minting the NFT on Wallet!')
+        return;
       }
-    } catch (e) {
+
+      console.log(mint)
+      setMint(mint)
+      alert('NFT minted successfully on Solana!')
+      await disconnect()
+
+      // Call the API.
+      // const txHash = await sendTxOnChain(rpc, address, cid)
+
+      // if (txHash) {
+
+      // const latestTokenId = await getLatestTokenId(rpc)
+      // console.log(latestTokenId)
+      // if (chain?.id === 81) {
+      //   window.open(`https://shibuya.subscan.io/extrinsic/${txHash}`, '_blank')
+      // }
+      // window.open(getOpenseaUrl(rpc, ''), '_blank')
+      setLoading(false)
+      closeModal()
+      // }
+    } catch (e: any) {
       console.log('error minting nft', e)
+      if (e?.message) {
+        alert(e.message)
+      }
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -98,7 +134,8 @@ export default function Gameplay() {
       setLoading(true)
       const story = await startNewStory()
       setLoading(false)
-      setBaseline({ title: story.title, summary: story.summary, message: story.message })
+      if (story && story.title)
+        setBaseline({ title: story.title, summary: story.summary, message: story.message })
     }
 
     if (baseline.title == '' && baseline.message == '' && !loading)
@@ -290,7 +327,7 @@ export default function Gameplay() {
             <p className="py-2 max-lines-2">{baseline.summary}</p>
             <div className="mt-2">
               {/* if there is a button in div, it will close the modal */}
-              <button disabled={isLoading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{isLoading ? 'loading...' : 'Mint NFT'}</button>
+              <button disabled={loading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{loading ? 'loading...' : 'Mint NFT'}</button>
             </div>
           </div>
         </div>

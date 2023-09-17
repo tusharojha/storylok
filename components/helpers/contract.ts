@@ -1,6 +1,42 @@
 import * as ethers from 'ethers'
 import lighthouse from '@lighthouse-web3/sdk'
 import { Chain, ChainDetails, getContractAddressFromRpc } from '../ChainLogo';
+import axios from 'axios';
+
+const token = process.env.NEXT_PUBLIC_UNDERDOG_NFT
+
+export const mintNftOnWallet = async (reciever: string, description: string, image: string, title: string) => {
+
+  const mintOptions = {
+    method: 'post',
+    url: 'https://dev.underdogprotocol.com/v2/projects/2/nfts',
+    headers: {
+      'accept': 'application/json',
+      'content-type': 'application/json',
+      'authorization': `Bearer ${token}`
+    },
+    data: {
+      name: title,
+      symbol: 'SNC',
+      description: description,
+      image: image,
+      externalUrl: 'https://storylok.xyz',
+      receiverAddress: reciever
+    }
+  };
+  try {
+    const res = await axios(mintOptions)
+    console.log(res.status)
+
+    if (res.status === 202) {
+      return res.data;
+    }
+    return null;
+  } catch (e) {
+    console.log(e)
+    return null;
+  }
+}
 
 export const prepareNftMetadata = async (image: string, title: string, description: string) => {
   const json = {
@@ -15,11 +51,12 @@ export const prepareNftMetadata = async (image: string, title: string, descripti
     ]
   }
 
-  console.log(JSON.stringify(json))
-  const uploadResponse = await lighthouse.uploadText(JSON.stringify(json), process.env.NEXT_PUBLIC_LIGHTHOUSE_KEY ?? '', 'nft.json'); // path, apiKey
+  return json
+  // console.log(JSON.stringify(json))
+  // const uploadResponse = await lighthouse.uploadText(JSON.stringify(json), process.env.NEXT_PUBLIC_LIGHTHOUSE_KEY ?? '', 'nft.json'); // path, apiKey
 
-  console.log(uploadResponse)
-  return uploadResponse.data.Hash
+  // console.log(uploadResponse)
+  // return uploadResponse.data.Hash
 }
 
 export const getLatestTokenId = async (rpc: string) => {

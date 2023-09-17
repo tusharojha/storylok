@@ -1,66 +1,46 @@
 import Header from '@/components/Header'
 import '../styles/globals.css'
 import type { AppProps } from 'next/app'
-import { WagmiConfig, configureChains, createConfig } from 'wagmi'
-import '@rainbow-me/rainbowkit/styles.css';
-import { baseGoerli, modeTestnet, optimismGoerli, zoraTestnet } from 'wagmi/chains'
-import { MetaMaskConnector } from 'wagmi/connectors/metaMask'
-import { publicProvider } from 'wagmi/providers/public'
-import merge from 'lodash.merge';
-import { RainbowKitProvider, Theme, getDefaultWallets, lightTheme, midnightTheme } from '@rainbow-me/rainbowkit'
 
+import { WalletAdapterNetwork } from '@solana/wallet-adapter-base';
+import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
+import { PhantomWalletAdapter, SolflareWalletAdapter, TrustWalletAdapter } from '@solana/wallet-adapter-wallets';
+import { clusterApiUrl } from '@solana/web3.js';
 
-const astarShibuya = {
-  id: 81,
-  name: "Astar Shibuya",
-  network: "astarTestnet",
-  nativeCurrency: {
-    name: "SBY",
-    symbol: "SBY",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://evm.shibuya.astar.network"],
-    },
-    public: {
-      http: ["https://evm.shibuya.astar.network"],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Explorer",
-      url: "https://shibuya.subscan.io/",
-    },
-  },
-  testnet: true,
-};
+import { useMemo } from 'react';
+
+// Use require instead of import since order matters
+require('@solana/wallet-adapter-react-ui/styles.css');
+require('../styles/globals.css');
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const { chains, publicClient } = configureChains(
-    [optimismGoerli, zoraTestnet, baseGoerli, modeTestnet, astarShibuya],
-    [publicProvider()],
-  )
-  const { connectors } = getDefaultWallets({
-    appName: 'Storylok',
-    projectId: 'storylok',
-    chains
-  });
+  const network = WalletAdapterNetwork.Testnet;
 
-  const config = createConfig({
-    autoConnect: true,
-    connectors,
-    publicClient,
-  })
+  // You can also provide a custom RPC endpoint
+  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
+
+  const wallets = useMemo(
+      () => [
+          new PhantomWalletAdapter(),
+          new TrustWalletAdapter(),
+          new SolflareWalletAdapter()
+      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [network]
+  );
+
 
   return <>
-    <WagmiConfig config={config}>
-      <RainbowKitProvider chains={chains}>
-        <Header />
-        <Component {...pageProps} />
-        <div id="modal" />
-      </RainbowKitProvider>
-    </WagmiConfig>
+    <ConnectionProvider endpoint={endpoint}>
+      <WalletProvider wallets={wallets} autoConnect>
+        <WalletModalProvider>
+          <Header />
+          <Component {...pageProps} />
+          <div id="modal" />
+        </WalletModalProvider>
+      </WalletProvider>
+    </ConnectionProvider>
   </>
 }
 
