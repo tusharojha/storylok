@@ -5,9 +5,9 @@ import { Fragment, useEffect, useRef, useState } from "react";
 import { continueStory, createImage, createImagePrompt, getImageData, startNewStory } from "../helpers/story";
 import { ChatMessage } from "../helpers/types";
 import Modal from 'react-modal';
-import { prepareNftMetadata, sendTxOnChain } from "../helpers/contract";
-import { useAccount, useConnect, usePublicClient, useSignMessage, useChainId, useNetwork } from "wagmi";
-import { ChainDetails, getContractAddressFromRpc } from "../ChainLogo";
+import { getLatestTokenId, prepareNftMetadata, sendTxOnChain } from "../helpers/contract";
+import { useAccount, usePublicClient, useSignMessage, useNetwork } from "wagmi";
+import { ChainDetails, getOpenseaUrl } from "../ChainLogo";
 import { NFTStorage } from 'nft.storage'
 
 const customStyles = {
@@ -62,16 +62,25 @@ export default function Gameplay() {
   const divRef = useRef(null);
 
   const mintNftOnChain = async () => {
-    if (!address) return;
+    if (!address || isLoading) return;
 
     signMessage({ message: `Hi from Storylok, I am confirming to mint my progress for the story with title ${baseline.title} at ${Date.now()}` })
     try {
+      setLoading(true)
       // Prepare NFT Metadata.
       const cid = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary)
       const rpc = chain?.rpcUrls.default.http[0] ?? ChainDetails['optimism'].rpc
       const txHash = await sendTxOnChain(rpc, address, cid)
-      if(txHash) {
-        window.open(`https://testnets.opensea.io/assets/optimism-goerli/${getContractAddressFromRpc(rpc)}/`, '_blank')
+
+      if (txHash) {
+        const latestTokenId = await getLatestTokenId(rpc)
+        console.log(latestTokenId)
+        if (chain?.id === 81) {
+          window.open(`https://shibuya.subscan.io/extrinsic/${txHash}`, '_blank')
+        }
+        window.open(getOpenseaUrl(rpc, ''), '_blank')
+        setLoading(false)
+        closeModal()
       }
     } catch (e) {
       console.log('error minting nft', e)
@@ -278,10 +287,10 @@ export default function Gameplay() {
           <img className="boxNoColor box1 w-64 rounded-md" src={base64Image} alt="NFT Image" />
           <div className="text-left px-4">
             <h1 className="text-xl font-bold">{baseline.title}</h1>
-            <p className="py-2 max-lines-5">{baseline.summary}</p>
+            <p className="py-2 max-lines-2">{baseline.summary}</p>
             <div className="mt-2">
               {/* if there is a button in div, it will close the modal */}
-              <button onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">Mint NFT</button>
+              <button disabled={isLoading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{isLoading ? 'loading...' : 'Mint NFT'}</button>
             </div>
           </div>
         </div>

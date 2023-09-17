@@ -9,9 +9,36 @@ import { publicProvider } from 'wagmi/providers/public'
 import merge from 'lodash.merge';
 import { RainbowKitProvider, Theme, getDefaultWallets, lightTheme, midnightTheme } from '@rainbow-me/rainbowkit'
 
+
+const astarShibuya = {
+  id: 81,
+  name: "Astar Shibuya",
+  network: "astarTestnet",
+  nativeCurrency: {
+    name: "SBY",
+    symbol: "SBY",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://evm.shibuya.astar.network"],
+    },
+    public: {
+      http: ["https://evm.shibuya.astar.network"],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Explorer",
+      url: "https://shibuya.subscan.io/",
+    },
+  },
+  testnet: true,
+};
+
 function MyApp({ Component, pageProps }: AppProps) {
   const { chains, publicClient } = configureChains(
-    [optimismGoerli, zoraTestnet, baseGoerli, modeTestnet],
+    [optimismGoerli, zoraTestnet, baseGoerli, modeTestnet, astarShibuya],
     [publicProvider()],
   )
   const { connectors } = getDefaultWallets({
