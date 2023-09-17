@@ -7,6 +7,10 @@
   src: url('../public/Virgil.woff2');
 }
 
+.wallet-adapter-button-trigger {
+  background-color: #512da8 !important;
+}
+
 /* Add the following custom CSS */
 .max-lines-4 {
   display: -webkit-box;
