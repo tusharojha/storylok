@@ -12,7 +12,7 @@ const Header = () => {
     <div className="flex-1">
       <div className="w-full">
         <Link href={"/"}><h1 className="text-3xl">storylok.xyz</h1></Link>
-        <p className="pt-2 text-sm">Lok is a Sanskrit term meaning "a particular division of the universe." </p>
+        <p className="pt-2 text-sm">Lok is a Sanskrit term meaning "a universe" </p>
       </div>
     </div>
     <div className="flex-none">

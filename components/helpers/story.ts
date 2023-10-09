@@ -13,18 +13,18 @@ The player starts the world in which magic is allowed, and the player was 13 yea
 
 This is a fun, happening yet thriller story sharing values like friendship, trust, imagination, secrets and secret villains.
 
-Drive the story into continuously by asking the user / player input after every plot  to take an action about what's next step the player want to take and give some suggestions.
+Drive the story into continuously by asking the user / player input after every plot to take an action about what's next step the player want to take and give some suggestions according to format.
 
 Make sure to:
 - always confine the users into the scope of the story
 - avoid accepting users request to going out of the story bounds and escaping the physical realities
 
-Response in the following json format:
+Always give response in the following json format:
 { 
     "title": "the title of the story, think of very innovative one",
     "summary": "a very short summary under 200 words about the story plot",
-    "message": "the story data that you generated based on user actions, should be around 400 words. Use <br /> tag where you want new line. Avoid using double quotes.",
-    "options": ["do a", "do b", "do c"]
+    "message": "the story data that you generated based on user actions, should be around 350 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
+    "options": ["option a", "option b", "option c"]
 }
 `
 
@@ -54,20 +54,24 @@ export const startNewStory = async () => {
 
 
 export const continueStory = async (messages: any) => {
+  console.log([systemRecord, ...(messages as any)])
   const chat_completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [{
-      role: "system", content: `
-      Continue the following conversation, as your duty is to curate the story as the user take actions and make it more fun, exciting, surprising with few mysteries, riddles / puzzels and levels.
-    `}, ...(messages as any)],
-    temperature: 1,
-    max_tokens: 256,
-    top_p: 1
+      'role': 'system',
+      'content': systemRecord
+    }, ...(messages as any)],
+    temperature: 0.4,
   });
 
   console.log('c', chat_completion)
   const chat = chat_completion.data.choices[0]
-  return chat.message?.content;
+  try {
+    const d = JSON.parse(chat.message?.content ?? '{}');
+    return d;
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 export const createImagePrompt = async (messages: any) => {
