@@ -7,9 +7,12 @@ import { ChatMessage } from "../helpers/types";
 import Modal from 'react-modal';
 import { mintNftOnWallet, prepareNftMetadata } from "../helpers/contract";
 import { NFTStorage } from 'nft.storage'
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react"
+
+import { Howl, Howler } from 'howler';
 import * as ed from '@noble/ed25519'
 import { sha512 } from "@noble/hashes/sha512";
+import axios from "axios";
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
 const controls = ['A', 'B', 'C']
@@ -32,8 +35,8 @@ export default function Gameplay() {
 
   const { publicKey, disconnect, signMessage } = useWallet()
 
-  const [pageNumber, setPageNumber] = useState(0)
-
+  const [firstLoading, setFirstLoading] = useState(false)
+  const [isMute, setIsMute] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [userCommand, setUserCommand] = useState('')
@@ -41,6 +44,10 @@ export default function Gameplay() {
   const [imageIpfs, setImageIpfs] = useState('')
   const [conversation, setConversation] = useState<ChatMessage[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
+
+  const [how, setHowl] = useState<Howl>()
+
+  const [bgHow, setBgHow] = useState<Howl>()
 
   const [mint, setMint] = useState()
   const [options, setOptions] = useState([])
@@ -52,13 +59,47 @@ export default function Gameplay() {
     }
   )
 
+  const commandInputRef = useRef<HTMLInputElement>(null);
+
+  async function convertTextToSpeech(text: string) {
+    if (isMute) return;
+
+    try {
+      const response = await axios.post("/api/play", {
+        body: { story: text.replaceAll('<br/>', '\n') },
+      });
+
+      if (response && (response as any).data) {
+        const audioBuffer = (response as any).data.audio;
+
+        const bl = new Blob([(Buffer.from(audioBuffer as any))], { type: 'audio/mpeg' })
+        const blobUrl = URL.createObjectURL(bl)
+        console.log(bl, audioBuffer, blobUrl)
+
+        if (how) {
+          how.stop();
+        }
+
+        var sound = new Howl({
+          src: [blobUrl],
+          html5: true
+        });
+
+        setHowl(sound)
+        sound.play();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   useEffect(() => {
     function handleKeyDown(e: any) {
       console.log(e.key, options.length);
+      if (commandInputRef && document && commandInputRef.current == document.activeElement) return;
 
       switch (e.key.toString().toUpperCase()) {
         case controls[0]:
-          console.log('hi')
           if (options.length < 1) break;
           takeActionWithPrompt(options[0])
           break;
@@ -93,8 +134,15 @@ export default function Gameplay() {
     setIsOpen(false);
   }
 
-
-  const divRef = useRef(null);
+  const toggleMute = () => {
+    if (!isMute) {
+      if (how) how.stop()
+      if (bgHow) bgHow.pause()
+    } else {
+      if (bgHow) bgHow.play()
+    }
+    setIsMute(!isMute)
+  }
 
   const mintNftOnChain = async () => {
     if (!publicKey || loading) return;
@@ -145,22 +193,36 @@ export default function Gameplay() {
   }
 
   const scrollToBottom = () => {
-    if (divRef.current) {
-      (divRef.current as any).scrollTop = (divRef.current as any).scrollHeight;
+    if (window && document.body) {
+      setTimeout(() => window.scroll({ behavior: 'smooth', top: document.body.scrollHeight }), 1000)
     }
   };
 
   useEffect(() => {
     const startGame = async () => {
+      setFirstLoading(true)
       setLoading(true)
+
+      var sound = new Howl({
+        src: ['/bg.m4a'],
+        html5: true,
+        loop: true,
+        volume: 0.2
+      });
+
+      sound.play();
+      setBgHow(sound)
+
       let story = await startNewStory()
       if (!story) {
         story = await startNewStory()
       }
       setLoading(false)
+      setFirstLoading(false)
       if (story && story.title) {
         setBaseline({ title: story.title, summary: story.summary, message: story.message })
         setOptions(story.options)
+        convertTextToSpeech(story.message)
       }
     }
 
@@ -212,6 +274,7 @@ Response must be in the following JSON format:
       }])
     setOptions(response.options)
     setLoading(false)
+    convertTextToSpeech(response.message)
     scrollToBottom()
   }
 
@@ -287,14 +350,13 @@ Response must be in the following JSON format:
 
   const progress = ((conversation.length / 20) * 100)
 
-  return <>
-    <Head>
-      <title>Storylok | Explore the world unkown to others | GenAI x NFT Based Game</title>
-      <meta name="description" content="World's first Generative AI based NFT Game in which player emerses themselves into text-based storyline and take decisions to progress on-chain." />
-      <link rel="icon" href="/favicon.png" />
-    </Head>
-    <div ref={divRef} className='mt-32 mx-4 flex flex-row flex-1'>
-      <div className="mb-16 justify-center flex flex-col items-center flex-1">
+  const renderBasedOnLoading = () => {
+    if (firstLoading)
+      return <div className="flex flex-1 w-screen h-screen justify-center items-center">
+        <img src="l2.gif" className="h-[50vh] w-[50vh]" />
+      </div>
+    return <div className='mt-32 mx-4 flex flex-row flex-1'>
+      <div className="mb-8 justify-center flex flex-col items-center flex-1">
         <div className="box box1 max-h-fit mr-4 pb-6 px-4">
           <div className="oddboxinner">
             <div className="text-justify text-lg px-4">
@@ -309,7 +371,7 @@ Response must be in the following JSON format:
           </div>
         </div>
         {conversation.map((i, index) => {
-          if(i.role == 'user') return;
+          if (i.role == 'user') return;
           return (
             <div className={`flex flex-1 justify-items-end items-end`}>
               <div key={i.content.slice(0, 10)} className="box box1 max-h-fit mr-4 my-4 pb-4">
@@ -332,16 +394,20 @@ Response must be in the following JSON format:
         })}
       </div>
       <div className="px-0 py-2 pb-0 flex flex-3 flex-col items-center w-[30vw]">
-        <div className="box box1 max-h-fit">
+        <div className="box box1 max-h-fit fixed">
           <div className="oddboxinner px-2">
 
+            <div className="flex flex-1 justify-end mb-2">
+              <span onClick={toggleMute} className="hover:text-gray-600 cursor-pointer">{isMute ? 'Unmute 🔇' : 'Mute 🔊'}</span>
+            </div>
+
             {/* Progress Bar */}
-            <div className="flex flex-1 px-0 flex-row justify-between items-end mb-8">
+            <div className={"flex flex-1 px-0 justify-between mb-8 " + (options.length == 0 ? "flex-col items-center min-w-[20vw]" : "flex-row items-end")}>
               <div className="flex flex-1 flex-col">
                 <h1 className="text-xl">Progress</h1>
-                <div style={{ backgroundSize: progress + '%' }} className="progress-7"></div>
+                <div style={{ backgroundSize: (options.length == 0 ? 100 : progress) + '%' }} className={"progress-7" + (options.length == 0 ? "  min-w-[20vw]" : "")}></div>
               </div>
-              {progress > 0 && <div onClick={openModal} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">
+              {progress > 0 && <div onClick={openModal} className={"font-bold text-md rounded-xl p-2 border-2 cursor-pointer" + (options.length == 0 ? " mt-4 px-2" : "")}>
                 {
                   loading ? <div className="flex flex-row">
                     <svg aria-hidden="true" className="w-6 h-6 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
@@ -350,40 +416,51 @@ Response must be in the following JSON format:
                 }
               </div>}
             </div>
+            {options.length == 0 ? <></> : <>
+              <span className="text-2xl font-bold">What's your next move?</span>
+              <div className="flex flex-1 flex-col mt-4">
+                {options.map((i, index) => {
+                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-[#25b09b] hover:bg-[#1f9181]">{i}</div></div>
+                })}
+              </div>
 
-            <span className="text-2xl font-bold">What's your next move?</span>
-            <div className="flex flex-1 flex-col mt-4">
-              {options.map((i, index) => {
-                return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-[#25b09b]">{i}</div></div>
-              })}
-            </div>
+              <div className="flex flex-row py-1 px-0">
 
-            <div className="flex flex-row bg-white py-1 px-0">
-
-              <input
-                value={userCommand}
-                onKeyPress={handleKeyPress}
-                onChange={(e) => setUserCommand(e.target.value)}
-                type="text" aria-multiline
-                placeholder="do something else?"
-                className="input w-full px-6 py-2 mr-2 rounded-xl border-2" />
+                <input
+                  ref={commandInputRef}
+                  value={userCommand}
+                  onKeyPress={handleKeyPress}
+                  onChange={(e) => setUserCommand(e.target.value)}
+                  type="text" aria-multiline
+                  placeholder="do something else?"
+                  className="input w-full px-6 py-2 mr-2 rounded-xl border-2" />
 
 
-              <button onClick={() => takeAction()} className={`rounded-full p-4 bg-[#25b09b]`}>
-                {
-                  loading ?
-                    <svg aria-hidden="true" className="w-4 h-4 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
-                    :
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="#fff">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                    </svg>
-                }
-              </button>
-            </div>
+                <button onClick={() => takeAction()} className={`rounded-full p-4 bg-[#25b09b]`}>
+                  {
+                    loading ?
+                      <svg aria-hidden="true" className="w-4 h-4 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
+                      :
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="#fff">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                      </svg>
+                  }
+                </button>
+              </div>
+            </>}
           </div>
         </div>
       </div>
     </div>
+  }
+
+  return <>
+    <Head>
+      <title>Storylok | Explore the world unkown to others | GenAI x NFT Based Game</title>
+      <meta name="description" content="World's first Generative AI based NFT Game in which player emerses themselves into text-based storyline and take decisions to progress on-chain." />
+      <link rel="icon" href="/favicon.png" />
+    </Head>
+    {renderBasedOnLoading()}
     <Modal
       isOpen={modalIsOpen}
       onRequestClose={closeModal}
