@@ -437,7 +437,7 @@ Response must be in the following JSON format:
               <span className="text-2xl font-bold">What's your next move?</span>
               <div className="flex flex-1 flex-col mt-4">
                 {options.map((i, index) => {
-                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-[#25b09b] hover:bg-[#1f9181]">{i}</div></div>
+                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index].includes(') ') ? controls[index].split(') ')[1] : controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-[#25b09b] hover:bg-[#1f9181]">{i}</div></div>
                 })}
               </div>
 

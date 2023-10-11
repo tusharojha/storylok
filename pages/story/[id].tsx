@@ -1,5 +1,3 @@
-import { fetchNft } from "@/components/helpers/contract"
-import { useRouter } from "next/router"
 import { Fragment, useEffect, useState } from "react"
 import Image from 'next/image'
 import { NextSeo } from "next-seo"
@@ -43,38 +41,38 @@ export default function StoryPage(props: StoryPageProps) {
   }
 
   const fetchIpfsData = async () => {
-    // if (nft.attributes && nft.attributes.conversation) {
+    if (nft.attributes && nft.attributes.conversation) {
 
-    //   const conversation = nft.attributes.conversation
-    //   const options = {
-    //     method: 'GET',
-    //     url: `https://gateway.lighthouse.storage/ipfs/${conversation}`,
-    //     headers: {
-    //       accept: 'application/json',
-    //     }
-    //   };
+      const conversation = nft.attributes.conversation
+      const options = {
+        method: 'GET',
+        url: `https://gateway.lighthouse.storage/ipfs/${conversation}`,
+        headers: {
+          accept: 'application/json',
+        }
+      };
 
-    //   const response = await axios(options)
+      const response = await axios(options)
 
-    //   console.log(response.data, typeof response.data)
-    //   if (response.data) {
-    //     setMessage(response.data.message)
-    //     setConversation(response.data.conversation)
-    //     setLoadingContent(false)
-    //   }
-    // }
+      console.log(response.data, typeof response.data)
+      if (response.data) {
+        setMessage(response.data.message)
+        setConversation(response.data.conversation)
+        setLoadingContent(false)
+      }
+    }
   }
 
   useEffect(() => {
-    try{
-    if (nftExists) {
-      setLoadingContent(true)
-      fetchIpfsData()
+    try {
+      if (nftExists) {
+        setLoadingContent(true)
+        fetchIpfsData()
+      }
+    } catch (e) {
+      console.log('error in ipfs')
+      console.log(e)
     }
-  } catch (e) {
-    console.log('error in ipfs')
-    console.log(e)
-  }
   }, [])
 
 
@@ -173,6 +171,34 @@ export default function StoryPage(props: StoryPageProps) {
 export async function getServerSideProps(context: any) {
   const { id } = context.query
   console.log('id', context.query, id)
+
+
+  const fetchNft = async (id: string) => {
+
+    const options = {
+      method: 'GET',
+      url: `https://devnet.underdogprotocol.com/v2/projects/2/nfts/${id}`,
+      headers: {
+        accept: 'application/json',
+        authorization: `Bearer ${process.env.NEXT_PUBLIC_UNDERDOG_NFT}`
+      }
+    };
+
+    try {
+      const res = await axios(options)
+      console.log(res)
+
+      if (res.status === 200) {
+        return res.data;
+      }
+      return null;
+    } catch (e) {
+      console.log(e)
+      return null;
+    }
+  }
+
+
   if (!id) {
     return { props: { nftExists: false } }
   }
