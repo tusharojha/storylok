@@ -178,7 +178,7 @@ export async function getServerSideProps(context: any) {
     return { props: { nftExists: false } }
   }
 
-  const nft = await fetchNft(id)
+  const nft = await fetchNft(id.toString())
   console.log('nft', nft)
   if (!nft) {
     return { props: { nftExists: false } }
