@@ -40,6 +40,12 @@ export default function StoryPage(props: StoryPageProps) {
     window.open(twitterShareUrl, '_blank');
   }
 
+  const openWalletOnSolscan = () => {
+    const url = `https://solscan.io/account/${nft.ownerAddress}`
+    // Open Twitter in a new window or tab
+    window.open(url, '_blank');
+  }
+
   const fetchIpfsData = async () => {
     if (nft.attributes && nft.attributes.conversation) {
 
@@ -151,6 +157,7 @@ export default function StoryPage(props: StoryPageProps) {
           <div className="oddboxinner px-2 flex flex-col">
 
             <Image className="boxNoColor box1 mb-2 mx-0 w-full" alt="NFT Image" height={300} width={260} src={nft.image} />
+            <p onClick={openWalletOnSolscan} className="text-md text-[#25b09b] hover:text-[#1f9181] cursor-pointer">{`Owner: ${nft.ownerAddress.slice(0, 4)}...${nft.ownerAddress.slice(nft.ownerAddress.length - 4, nft.ownerAddress.length)}`}</p>
             <h1 className="text-2xl font-bold">{nft.name}</h1>
             <p className="textClamp">{nft.description}</p>
             <div className="flex flex-row">
@@ -177,7 +184,7 @@ export async function getServerSideProps(context: any) {
 
     const options = {
       method: 'GET',
-      url: `https://devnet.underdogprotocol.com/v2/projects/2/nfts/${id}`,
+      url: `https://mainnet.underdogprotocol.com/v2/projects/1/nfts/${id}`,
       headers: {
         accept: 'application/json',
         authorization: `Bearer ${process.env.NEXT_PUBLIC_UNDERDOG_NFT}`

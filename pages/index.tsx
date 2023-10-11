@@ -25,6 +25,7 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     filter: 'drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06))',
     zIndex: 100,
+    height: 460,
     overflow: 'hidden'
   },
 };
@@ -115,14 +116,14 @@ export default function Home() {
       <div className='flex flex-row'>
         <div className='flex flex-1 justify-center items-center border-r-2 mr-2'>
           <div onClick={startRandomGame} className="font-bold hover:bg-gray-100 text-xl rounded-xl p-4 border-2 cursor-pointer">
-            Quick Start ⚡️
+            Start Random ⚡️
           </div>
         </div>
-        <div className='flex flex-1 h-[50vh] flex-col justify-center items-center'>
+        <div className='flex flex-1 flex-col justify-center items-center'>
           <div className='flex flex-row flex-1 w-full'>
             {loka.slice(0, 2).map((lok) => {
               return <div onClick={() => startCustomGame(lok.title)} className="cursor-pointer duration-500 hover:opacity-60 relative mr-2 flex flex-1 flex-col">
-                <Image className='aboslute boxNoColor box1 ' alt={'A Storylok'} height="300" width="300" src={'/banners/' + lok.image ?? ''} />
+                <Image className='aboslute boxNoColor box1' alt={'A Storylok'} height="300" width="300" src={'/banners/' + lok.image ?? ''} />
                 <div className='absolute text-white text-lg top-0 left-0 w-full h-full flex flex-1 justify-center items-center'>
                   <h1 className='drop-shadow-md text-xl text-center font-bold'>{lok.title}</h1>
                 </div>
@@ -132,9 +133,9 @@ export default function Home() {
           <div className='flex flex-row flex-1 w-full mt-2'>
             {loka.slice(2, 4).map((lok) => {
               return <div onClick={() => startCustomGame(lok.title)} className="cursor-pointer duration-500 hover:opacity-60 relative mr-2 flex flex-1 flex-col">
-                <Image className='absolute top-0 left-0 boxNoColor box1 top-0 start-0' alt={'A Storylok'} height="300" width="300" src={'/banners/' + lok.image ?? ''} />
+                <Image className='aboslute boxNoColor box1' alt={'A Storylok'} height="300" width="300" src={'/banners/' + lok.image ?? ''} />
                 <div className='absolute text-white text-lg top-0 left-0 w-full h-full flex flex-1 justify-center items-center'>
-                  <h1 className='drop-shadow-md text-2xl text-center font-bold'>{lok.title}</h1>
+                  <h1 className='drop-shadow-md text-xl text-center font-bold'>{lok.title}</h1>
                 </div>
               </div>
             })}

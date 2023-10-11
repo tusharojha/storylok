@@ -10,7 +10,7 @@ export const fetchNft = async (id: string) => {
 
   const options = {
     method: 'GET',
-    url: `https://devnet.underdogprotocol.com/v2/projects/2/nfts/${id}`,
+    url: `https://mainnet.underdogprotocol.com/v2/projects/1/nfts/${id}`,
     headers: {
       accept: 'application/json',
       authorization: `Bearer ${token}`
@@ -35,7 +35,7 @@ export const fetchLatestNfts = async () => {
 
   const options = {
     method: 'GET',
-    url: 'https://devnet.underdogprotocol.com/v2/projects/2/nfts',
+    url: 'https://mainnet.underdogprotocol.com/v2/projects/1/nfts',
     headers: {
       accept: 'application/json',
       authorization: `Bearer ${token}`
@@ -57,10 +57,9 @@ export const fetchLatestNfts = async () => {
 }
 
 export const mintNftOnWallet = async (reciever: string, description: string, image: string, title: string, hash: string) => {
-
   const mintOptions = {
     method: 'post',
-    url: 'https://dev.underdogprotocol.com/v2/projects/2/nfts',
+    url: 'https://mainnet.underdogprotocol.com/v2/projects/1/nfts',
     headers: {
       'accept': 'application/json',
       'content-type': 'application/json',
