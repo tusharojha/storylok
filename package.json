@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@lighthouse-web3/kavach": "^0.1.4",
     "@lighthouse-web3/sdk": "^0.2.6",
     "@noble/ed25519": "^2.0.0",
     "@rainbow-me/rainbowkit": "^1.0.8",

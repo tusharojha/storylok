@@ -721,6 +721,15 @@
     bls-eth-wasm "^1.0.5"
     joi "^17.7.0"
 
+"@lighthouse-web3/kavach@^0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@lighthouse-web3/kavach/-/kavach-0.1.4.tgz#469259c5b4fb5d7968d96b06d80de887fd10b1d3"
+  integrity sha512-k3c66djKQ7eEsFN+WsEPZw4Wa+IYlTSbfbvwFR0LGfRD44mwHbmfiO2EsVYlWwO5G/fIiSCqFQ0lXOmdnMcDCQ==
+  dependencies:
+    axios "^0.24.0"
+    bls-eth-wasm "^1.0.5"
+    joi "^17.7.0"
+
 "@lighthouse-web3/sdk@^0.2.6":
   version "0.2.6"
   resolved "https://registry.npmjs.org/@lighthouse-web3/sdk/-/sdk-0.2.6.tgz"
