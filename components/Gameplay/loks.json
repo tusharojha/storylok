@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "loks": [
+    {
+      "title": "be harry",
+      "image": "magic.png",
+      "plot": "The player starts the world in which magic is allowed, and the player was 13 years old when he was kidnapped by an elf and admitted to one of the very famous magic school which was not known by non-believers. This is a fun, happening yet thriller story sharing values like friendship, trust, imagination, secrets and secret villains."
+    },
+    {
+      "title": "naruto",
+      "image": "ninja.png",
+      "plot": "The player starts the world of ninjas, and the a young ninja who seeks recognition from his peers and dreams of becoming the Hokage, the leader of his village. This is a fun, comic yet thriller story sharing values like decipline, hardwork, bravery, secrets, friendships and fighting bad guys."
+    },
+    {
+      "title": "sherlock holmes",
+      "image": "detective.png",
+      "plot": "The player starts the world full of crime & mystery, and the character is a private detective with keen powers of observation, he notices things that others simply don't and is on a task to solve a mission. This is a serious, thriller story sharing values like observation, finding conclusions, riddles, secrets, mystery and helping find real criminals."
+    },
+    {
+      "title": "suits",
+      "image": "lawyer.jpeg",
+      "plot": "The player starts his career as an defence lawyer in supereme court of India he is continuously approached by different clients one by one to him to take their case and prove them innocent. The cases are very vast and difficult he has to go through challenges, attacks, mysteries to solve them. This is a serious, thriller, yet a little bit comedy story sharing values like honesty, finding truth, riddles, secrets, mystery and helping find real criminals."
+    }
+  ]
+}

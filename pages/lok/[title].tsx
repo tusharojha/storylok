@@ -2,7 +2,7 @@ import Head from 'next/head'
 import Marquee from "react-fast-marquee";
 import Modal from 'react-modal';
 
-import '../styles/Home.module.css';
+import '../../styles/Home.module.css';
 import GameCard from '@/components/GameCard';
 import Dashboard from '@/components/Dashboard/Dashboard';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -11,6 +11,8 @@ import { fetchLatestNfts } from '@/components/helpers/contract';
 import { loks } from '@/components/Gameplay/loks.json'
 import Image from 'next/image'
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
+import Gameplay from '@/components/Gameplay/Gameplay';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -29,26 +31,24 @@ const customStyles = {
   },
 };
 
+const WalletMultiButtonDynamic = dynamic(
+  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
+  { ssr: false }
+);
+
 export default function Home() {
+  const { query } = useRouter()
+
+  const { title } = query
+
   const { publicKey } = useWallet()
+
+  const [lok, setLok] = useState<string>('')
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
-  const [startGame, setStartGame] = useState(false);
-
-  const { push } = useRouter()
+  const [isInvalid, setIsInvalid] = useState(true);
 
   const isLoggedIn = publicKey != null
-
-  function getRandomElementsFromArray(arr: any[], numberOfElements: number): any[] {
-    let shuffledArray = arr.slice(); // Create a copy of the original array
-    for (let i = shuffledArray.length - 1; i > 0; i--) {
-      // Shuffle the array using Fisher-Yates algorithm
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledArray[i], shuffledArray[j]] = [shuffledArray[j], shuffledArray[i]];
-    }
-
-    return shuffledArray.slice(0, numberOfElements); // Return the first numberOfElements elements from the shuffled array
-  }
 
   function closeModal() {
     setIsOpen(false);
@@ -64,22 +64,32 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (isLoggedIn) {
+    if (!isLoggedIn) {
       setIsOpen(true)
+    } else {
+      setIsOpen(false)
+    }
+    console.log(isLoggedIn)
+  }, [isLoggedIn])
+
+
+  useEffect(() => {
+    // Find item from title.
+    const lok = loks.find((item) => item.title === title)
+
+    console.log('finding here', lok)
+    if (lok) {
+      setIsInvalid(false)
+
+      setLok(lok.plot)
     }
   }, [isLoggedIn])
 
-  const startRandomGame = () => {
-    setStartGame(true)
-  }
+  console.log('is', isLoggedIn && !isInvalid)
 
-  const startCustomGame = (title: string) => {
-    push(`/lok/${title}`)
-  }
-
-  const loka = getRandomElementsFromArray(loks, 4)
-
-  if (startGame) return <Dashboard />
+  if (isLoggedIn && !isInvalid) return <>
+    <Gameplay plot={lok} />
+  </>
 
   return <>
     <Head>
@@ -111,35 +121,10 @@ export default function Home() {
       contentLabel="NFT Modal"
       shouldCloseOnOverlayClick={false}
     >
-      <h1 className='text-2xl font-bold'>Pick a Storylok</h1>
-      <div className='flex flex-row'>
-        <div className='flex flex-1 justify-center items-center border-r-2 mr-2'>
-          <div onClick={startRandomGame} className="font-bold hover:bg-gray-100 text-xl rounded-xl p-4 border-2 cursor-pointer">
-            Quick Start ⚡️
-          </div>
-        </div>
-        <div className='flex flex-1 h-[50vh] flex-col justify-center items-center'>
-          <div className='flex flex-row flex-1 w-full'>
-            {loka.slice(0, 2).map((lok) => {
-              return <div onClick={() => startCustomGame(lok.title)} className="cursor-pointer duration-500 hover:opacity-60 relative mr-2 flex flex-1 flex-col">
-                <Image className='aboslute boxNoColor box1 ' alt={'A Storylok'} height="300" width="300" src={'/banners/' + lok.image ?? ''} />
-                <div className='absolute text-white text-lg top-0 left-0 w-full h-full flex flex-1 justify-center items-center'>
-                  <h1 className='drop-shadow-md text-xl text-center font-bold'>{lok.title}</h1>
-                </div>
-              </div>
-            })}
-          </div>
-          <div className='flex flex-row flex-1 w-full mt-2'>
-            {loka.slice(2, 4).map((lok) => {
-              return <div onClick={() => startCustomGame(lok.title)} className="cursor-pointer duration-500 hover:opacity-60 relative mr-2 flex flex-1 flex-col">
-                <Image className='absolute top-0 left-0 boxNoColor box1 top-0 start-0' alt={'A Storylok'} height="300" width="300" src={'/banners/' + lok.image ?? ''} />
-                <div className='absolute text-white text-lg top-0 left-0 w-full h-full flex flex-1 justify-center items-center'>
-                  <h1 className='drop-shadow-md text-2xl text-center font-bold'>{lok.title}</h1>
-                </div>
-              </div>
-            })}
-          </div>
-        </div>
+      <h1 className='text-2xl font-bold mb-4 text-center'>Please Login via Phantom Wallet</h1>
+      <p className='text-lg mb-4 text-center'>We will be able to mint the NFT on Game Completion<br></br> to your wallet as a Memory from this World.</p>
+      <div className='flex flex-1 w-full justify-center'>
+        <WalletMultiButtonDynamic />
       </div>
     </Modal>
   </>

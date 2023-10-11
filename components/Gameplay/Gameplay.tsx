@@ -13,7 +13,15 @@ import { Howl, Howler } from 'howler';
 import * as ed from '@noble/ed25519'
 import { sha512 } from "@noble/hashes/sha512";
 import axios from "axios";
+
+import { loks } from './loks.json'
+import { useRouter } from "next/router";
+
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
+
+type GameplayProp = {
+  plot?: string
+}
 
 const controls = ['A', 'B', 'C']
 
@@ -31,10 +39,13 @@ const customStyles = {
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
 
-export default function Gameplay() {
+export default function Gameplay({ plot }: GameplayProp) {
+
+  const { push } = useRouter()
 
   const { publicKey, disconnect, signMessage } = useWallet()
 
+  const [successModel, setSuccessModel] = useState(false)
   const [firstLoading, setFirstLoading] = useState(false)
   const [isMute, setIsMute] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
@@ -49,7 +60,7 @@ export default function Gameplay() {
 
   const [bgHow, setBgHow] = useState<Howl>()
 
-  const [mint, setMint] = useState()
+  const [mint, setMint] = useState<any>()
   const [options, setOptions] = useState([])
   const [baseline, setBaseline] = useState(
     {
@@ -164,10 +175,10 @@ export default function Gameplay() {
 
 
       // Prepare NFT Metadata.
-      const data = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary)
+      const { hash, json } = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary, baseline.message, conversation)
 
 
-      const mint = await mintNftOnWallet(publicKey.toString(), data.description, data.image, data.name)
+      const mint = await mintNftOnWallet(publicKey.toString(), json.description, json.image, json.name, hash)
 
       if (!mint) {
         setLoading(false)
@@ -177,11 +188,13 @@ export default function Gameplay() {
 
       console.log(mint)
       setMint(mint)
-      alert('NFT minted successfully on Solana!')
-      await disconnect()
 
+      // Change the mode that NFT minted on Solana, share your story.
+      setSuccessModel(true)
       setLoading(false)
+      push(`/story/${mint.nftId}`)
       closeModal()
+      await disconnect()
     } catch (e: any) {
       console.log('error minting nft', e)
       if (e?.message) {
@@ -198,6 +211,8 @@ export default function Gameplay() {
     }
   };
 
+  const getRandomInt = (max: number) => Math.floor(Math.random() * max);
+
   useEffect(() => {
     const startGame = async () => {
       setFirstLoading(true)
@@ -213,9 +228,12 @@ export default function Gameplay() {
       sound.play();
       setBgHow(sound)
 
-      let story = await startNewStory()
+      // Randomly pick a lok aka storyplot.
+      const lok = plot ?? loks[getRandomInt(loks.length)].plot
+
+      let story = await startNewStory(lok)
       if (!story) {
-        story = await startNewStory()
+        story = await startNewStory(lok)
       }
       setLoading(false)
       setFirstLoading(false)
@@ -353,7 +371,7 @@ Response must be in the following JSON format:
   const renderBasedOnLoading = () => {
     if (firstLoading)
       return <div className="flex flex-1 w-screen h-screen justify-center items-center">
-        <img src="l2.gif" className="h-[50vh] w-[50vh]" />
+        <img src="/l2.gif" className="h-[50vh] w-[50vh]" />
       </div>
     return <div className='mt-32 mx-4 flex flex-row flex-1'>
       <div className="mb-8 justify-center flex flex-col items-center flex-1">
@@ -407,7 +425,7 @@ Response must be in the following JSON format:
                 <h1 className="text-xl">Progress</h1>
                 <div style={{ backgroundSize: (options.length == 0 ? 100 : progress) + '%' }} className={"progress-7" + (options.length == 0 ? "  min-w-[20vw]" : "")}></div>
               </div>
-              {progress > 0 && <div onClick={openModal} className={"font-bold text-md rounded-xl p-2 border-2 cursor-pointer" + (options.length == 0 ? " mt-4 px-2" : "")}>
+              {progress > 0 && <div onClick={openModal} className={"font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer" + (options.length == 0 ? " mt-4 px-2" : "")}>
                 {
                   loading ? <div className="flex flex-row">
                     <svg aria-hidden="true" className="w-6 h-6 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
@@ -454,6 +472,22 @@ Response must be in the following JSON format:
     </div>
   }
 
+  const shareOnX = () => {
+    // Define the tweet text and image URL
+    const tweetText = `Just played ${baseline.title} on @Storylok_xyz, a story based NFT game on @Solana that lets you explore AI-crafted realms.\n\nhttps://storylok.xyz/story/${mint!.nftId}`;
+
+    // Encode the tweet text and image URL for the Twitter share URL
+    const encodedTweetText = encodeURIComponent(tweetText);
+
+    // Create the Twitter share URL
+    const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodedTweetText}`;
+
+    // Open Twitter in a new window or tab
+    window.open(twitterShareUrl, '_blank');
+    closeModal()
+  }
+
+
   return <>
     <Head>
       <title>Storylok | Explore the world unkown to others | GenAI x NFT Based Game</title>
@@ -475,7 +509,7 @@ Response must be in the following JSON format:
             <p className="py-2 max-lines-2">{baseline.summary}</p>
             <div className="mt-2">
               {/* if there is a button in div, it will close the modal */}
-              <button disabled={loading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{loading ? 'loading...' : 'Mint NFT'}</button>
+              {successModel ? <button disabled={loading} onClick={() => shareOnX()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">Share on 𝕏</button> : <button disabled={loading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{loading ? 'loading...' : 'Mint NFT'}</button>}
             </div>
           </div>
         </div>

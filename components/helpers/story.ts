@@ -7,11 +7,11 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-const systemRecord = `You are an excellent story teller, place the user as the main character of story and write in that context. Consider the following initial plot:
+let storyPlot = ''
 
-The player starts the world in which magic is allowed, and the player was 13 years old when he was kidnapped by an elf and admitted to one of the very famous magic school which was not known by non-believers. 
+const systemRecord = () => `You are an excellent story teller, place the user as the main character of story and write in that context. Consider the following initial plot:
 
-This is a fun, happening yet thriller story sharing values like friendship, trust, imagination, secrets and secret villains.
+${storyPlot}
 
 Drive the story into continuously by asking the user / player input after every plot to take an action about what's next step the player want to take and give some suggestions according to format.
 
@@ -28,11 +28,11 @@ Always give response in the following json format:
 }
 `
 
-export const startNewStory = async () => {
-
+export const startNewStory = async (sp: string) => {
+  storyPlot = sp
   const messages = [{
     'role': 'system',
-    'content': systemRecord
+    'content': systemRecord()
   }]
 
   const chat_completion = await openai.createChatCompletion({
@@ -54,12 +54,12 @@ export const startNewStory = async () => {
 
 
 export const continueStory = async (messages: any) => {
-  console.log([systemRecord, ...(messages as any)])
+  console.log([systemRecord(), ...(messages as any)])
   const chat_completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [{
       'role': 'system',
-      'content': systemRecord
+      'content': systemRecord()
     }, ...(messages as any)],
     temperature: 0.4,
   });
