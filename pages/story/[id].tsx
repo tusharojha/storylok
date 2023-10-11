@@ -3,7 +3,6 @@ import { useRouter } from "next/router"
 import { Fragment, useEffect, useState } from "react"
 import Image from 'next/image'
 import { NextSeo } from "next-seo"
-import lighthouse from '@lighthouse-web3/sdk'
 import axios from "axios"
 import { ChatMessage } from "@/components/helpers/types"
 
