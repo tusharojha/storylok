@@ -194,7 +194,6 @@ export default function Gameplay({ plot }: GameplayProp) {
       setLoading(false)
       push(`/story/${mint.nftId}`)
       closeModal()
-      await disconnect()
     } catch (e: any) {
       console.log('error minting nft', e)
       if (e?.message) {
