@@ -67,10 +67,15 @@ export default function StoryPage(props: StoryPageProps) {
   }
 
   useEffect(() => {
+    try{
     if (nftExists) {
       setLoadingContent(true)
       fetchIpfsData()
     }
+  } catch (e) {
+    console.log('error in ipfs')
+    console.log(e)
+  }
   }, [])
 
 
@@ -145,7 +150,7 @@ export default function StoryPage(props: StoryPageProps) {
           })}
         </div>}
       <div className="px-0 py-2 pb-0 flex flex-3 flex-col items-center w-[30vw]">
-        <div className="box box1 max-h-fit fixed">
+        <div className="box box1 max-h-fit">
           <div className="oddboxinner px-2 flex flex-col">
 
             <Image className="boxNoColor box1 mb-2 mx-0 w-full" alt="NFT Image" height={300} width={260} src={nft.image} />
