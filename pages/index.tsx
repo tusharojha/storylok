@@ -25,7 +25,6 @@ const customStyles = {
     transform: 'translate(-50%, -50%)',
     filter: 'drop-shadow(0 4px 3px rgb(0 0 0 / 0.07)) drop-shadow(0 2px 2px rgb(0 0 0 / 0.06))',
     zIndex: 100,
-    height: 460,
     overflow: 'hidden'
   },
 };
@@ -113,9 +112,9 @@ export default function Home() {
       shouldCloseOnOverlayClick={false}
     >
       <h1 className='text-2xl font-bold'>Pick a Storylok</h1>
-      <div className='flex flex-row'>
-        <div className='flex flex-1 justify-center items-center border-r-2 mr-2'>
-          <div onClick={startRandomGame} className="font-bold hover:bg-gray-100 text-xl rounded-xl p-4 border-2 cursor-pointer">
+      <div className='flex md:flex-row flex-col'>
+        <div className='flex flex-1 justify-center items-center md:border-r-2 mr-2'>
+          <div onClick={startRandomGame} className="font-bold hover:bg-gray-100 md:text-xl text-md md:my-0 my-4 rounded-xl p-4 border-2 cursor-pointer">
             Start Random ⚡️
           </div>
         </div>
