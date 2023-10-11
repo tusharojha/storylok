@@ -43,26 +43,26 @@ export default function StoryPage(props: StoryPageProps) {
   }
 
   const fetchIpfsData = async () => {
-    if (nft.attributes && nft.attributes.conversation) {
+    // if (nft.attributes && nft.attributes.conversation) {
 
-      const conversation = nft.attributes.conversation
-      const options = {
-        method: 'GET',
-        url: `https://gateway.lighthouse.storage/ipfs/${conversation}`,
-        headers: {
-          accept: 'application/json',
-        }
-      };
+    //   const conversation = nft.attributes.conversation
+    //   const options = {
+    //     method: 'GET',
+    //     url: `https://gateway.lighthouse.storage/ipfs/${conversation}`,
+    //     headers: {
+    //       accept: 'application/json',
+    //     }
+    //   };
 
-      const response = await axios(options)
+    //   const response = await axios(options)
 
-      console.log(response.data, typeof response.data)
-      if (response.data) {
-        setMessage(response.data.message)
-        setConversation(response.data.conversation)
-        setLoadingContent(false)
-      }
-    }
+    //   console.log(response.data, typeof response.data)
+    //   if (response.data) {
+    //     setMessage(response.data.message)
+    //     setConversation(response.data.conversation)
+    //     setLoadingContent(false)
+    //   }
+    // }
   }
 
   useEffect(() => {
