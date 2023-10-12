@@ -257,9 +257,11 @@ export default function Gameplay({ plot }: GameplayProp) {
 
 Response must be in the following JSON format:
 { 
-    "message": "the story data that you generated based on user actions, should be around 350 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
+    "message": "the story data that you generated based on user actions. Use "<br/>" tag where you want new line. Avoid using double quotes.",
     "options": ["option a", "option b", "option c"]
 }
+
+Make sure message property has value under 250 words.
       `
     }
 
