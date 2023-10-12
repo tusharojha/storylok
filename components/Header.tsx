@@ -26,7 +26,7 @@ const Header = () => {
     }
   }, [isLoggedIn])
 
-  return <div className="navbar flex flex-1 justify-center p-4 z-50 bg-white w-full fixed top-0">
+  return <div className="navbar flex flex-1 justify-center p-4 xs:z-5 md:z-50 bg-white w-full fixed top-0">
     <div className="flex-1">
       <div className="w-full">
         <Link href={"/"}><h1 className="text-3xl">storylok.xyz</h1></Link>

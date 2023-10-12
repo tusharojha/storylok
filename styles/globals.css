@@ -7,6 +7,33 @@
   src: url('../public/shan.ttf');
 }
 
+
+/* Animation */
+.anim-typewriter {
+  animation: typewriter 4s steps(44) 1s 1 normal both,
+    blinkTextCursor 500ms steps(44) infinite normal;
+}
+
+@keyframes typewriter {
+  from {
+    width: 0;
+  }
+
+  to {
+    width: 24em;
+  }
+}
+
+@keyframes blinkTextCursor {
+  from {
+    border-right-color: rgba(255, 255, 255, .75);
+  }
+
+  to {
+    border-right-color: transparent;
+  }
+}
+
 .wallet-adapter-button-trigger {
   background-color: #512da8 !important;
 }
@@ -14,8 +41,9 @@
 .textClamp {
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 3; /* number of lines to show */
-          line-clamp: 3; 
+  -webkit-line-clamp: 3;
+  /* number of lines to show */
+  line-clamp: 3;
   -webkit-box-orient: vertical;
 }
 
@@ -79,6 +107,20 @@ body{
 .oddboxinner {
   margin: 15px;
   transform: rotate(-2deg);
+}
+
+@media screen and (max-width: 768px) {
+  .box1 {
+    margin-top: 5px;
+    border-width: 3px 4px 3px 5px;
+    border-radius: 10px;
+    transform: rotate(0deg);
+  }
+
+  .oddboxinner {
+    margin: 15px;
+    transform: rotate(0deg);
+  }
 }
 
 .progress-7 {

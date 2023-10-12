@@ -38,7 +38,8 @@ export const startNewStory = async (sp: string) => {
   const chat_completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: messages as any,
-    temperature: 1
+    temperature: 1,
+    max_tokens: 250
   });
 
   console.log(chat_completion)
@@ -62,6 +63,7 @@ export const continueStory = async (messages: any) => {
       'content': systemRecord()
     }, ...(messages as any)],
     temperature: 0.4,
+    max_tokens: 300
   });
 
   console.log('c', chat_completion)
