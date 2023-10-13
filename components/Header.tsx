@@ -3,14 +3,16 @@ import dynamic from "next/dynamic";
 import Link from "next/link"
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-const WalletSolButton = dynamic(async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton, { ssr: false })
+import { ConnectWallet } from "./ConnectWallet";
+import { useAccount } from "@particle-network/connect-react-ui";
+
 const Header = () => {
-  const {publicKey: account} = useWallet()
+  const account = useAccount()
   const [loggedIn, setIsLoggedIn] = useState(false)
 
   useEffect(() => {
 
-    const isNotLoggedIn = account == null
+    const isNotLoggedIn = account == undefined || account.length < 3
     setIsLoggedIn(!isNotLoggedIn)
 
     if (loggedIn && isNotLoggedIn) {
@@ -18,16 +20,16 @@ const Header = () => {
     }
   }, [account])
 
-  return <div className="navbar flex flex-1 justify-center p-4 xs:z-5 md:z-50 bg-white w-full fixed top-0">
+  return <div className="navbar flex flex-1 justify-center items-center p-4 xs:z-5 md:z-50 bg-white w-full md:fixed top-0">
     <div className="flex-1">
       <div className="w-full">
-        <Link href={"/"}><h1 className="text-3xl">storylok.xyz</h1></Link>
-        <p className="pt-2 text-sm">Lok is a Sanskrit term meaning "a universe" </p>
+        <Link href={"/"}><h1 className="text-3xl mr-4">storylok.xyz</h1></Link>
+        {/* <p className="pt-2 text-sm">Lok is a Sanskrit term meaning "a universe" </p> */}
       </div>
     </div>
     <div className="flex-none">
-      {/* <ConnectWallet /> */}
-      <WalletSolButton />
+      <ConnectWallet />
+      {/* <WalletSolButton /> */}
     </div>
   </div>
 }

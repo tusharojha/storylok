@@ -108,7 +108,7 @@ export default function StoryPage(props: StoryPageProps) {
         cardType: 'summary_large_image',
       }}
     />
-    <div className='mt-32 mx-4 flex md:flex-row flex-col-reverse flex-1'>
+    <div className='md:mt-32 mx-4 flex md:flex-row flex-col-reverse flex-1'>
       {loadingContent ?
         <>
           <div className="flex flex-1 w-screen h-[70vh] justify-center items-center">

@@ -13,6 +13,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import Gameplay from '@/components/Gameplay/Gameplay';
+import { useAccount } from '@particle-network/connect-react-ui';
+import { ConnectWallet } from '@/components/ConnectWallet';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -31,24 +33,20 @@ const customStyles = {
   },
 };
 
-const WalletMultiButtonDynamic = dynamic(
-  async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton,
-  { ssr: false }
-);
 
 export default function Home() {
   const { query } = useRouter()
 
   const { title } = query
 
-  const { publicKey: account } = useWallet()
+  const account = useAccount()
 
   const [lok, setLok] = useState<string>('')
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
   const [isInvalid, setIsInvalid] = useState(true);
 
-  const isLoggedIn = account != null
+  const isLoggedIn = account != undefined && account.length > 3
 
   function closeModal() {
     setIsOpen(false);
@@ -124,7 +122,7 @@ export default function Home() {
       <h1 className='text-2xl font-bold mb-4 text-center'>Please Login via Phantom Wallet</h1>
       <p className='text-lg mb-4 text-center'>We will be able to mint the NFT on Game Completion<br></br> to your wallet as a Memory from this World.</p>
       <div className='flex flex-1 w-full justify-center'>
-        <WalletMultiButtonDynamic />
+        <ConnectWallet />
       </div>
     </Modal>
   </>

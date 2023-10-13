@@ -23,7 +23,7 @@ Always give response in the following json format:
 { 
     "title": "the title of the story, think of very innovative one",
     "summary": "a very short summary under 200 words about the story plot",
-    "message": "the story data that you generated based on user actions, should be around 350 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
+    "message": "the story data that you generated based on user actions, should be under 300 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
     "options": ["option a", "option b", "option c"]
 }
 `

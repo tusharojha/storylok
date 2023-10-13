@@ -42,9 +42,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             options={config}
             theme={'light'}
             language={'en'}   //optional：localize, default en
-            walletSort={['Particle Auth', 'Wallet']} //optional：walelt order
             particleAuthSort={[    //optional：display particle auth items and order
-              'particle',
               'phone',
               'google',
               'apple',

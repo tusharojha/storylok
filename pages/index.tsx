@@ -11,6 +11,7 @@ import { fetchLatestNfts } from '@/components/helpers/contract';
 import { loks } from '@/components/Gameplay/loks.json'
 import Image from 'next/image'
 import { useRouter } from 'next/router';
+import { useAccount } from '@particle-network/connect-react-ui';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -30,7 +31,7 @@ const customStyles = {
 };
 
 export default function Home() {
-  const { publicKey: account } = useWallet()
+  const account = useAccount()
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
   const [startGame, setStartGame] = useState(false);
@@ -64,7 +65,7 @@ export default function Home() {
   useEffect(() => {
     console.log('a', account)
 
-    const isNotLoggedIn = account == null
+    const isNotLoggedIn = account == undefined || account.length < 3
     setIsOpen(!isNotLoggedIn)
   }, [account])
 

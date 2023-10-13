@@ -12,6 +12,7 @@ import { ParticleNetwork } from '@particle-network/auth'
 
 import { SolanaWallet } from "@particle-network/solana-wallet";
 
+import TypeAnimation from 'react-type-animation'
 import { Howl, Howler } from 'howler';
 import * as ed from '@noble/ed25519'
 import { sha512 } from "@noble/hashes/sha512";
@@ -22,7 +23,9 @@ import { useRouter } from "next/router";
 import { useAccount, useNetwork, useConnectModal, useConnectKit, useParticleConnect, useParticleProvider } from "@particle-network/connect-react-ui";
 import config from "../config";
 import { useWallet } from "@solana/wallet-adapter-react";
+import bs58 from 'bs58';
 import { useMediaQuery } from "../helpers/hooks";
+import { PublicKey } from '@solana/web3.js'
 
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
@@ -51,25 +54,7 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const { push } = useRouter()
 
-  const { publicKey: account, signMessage } = useWallet()
-
-  const particle = new ParticleNetwork({
-    projectId: config.projectId,
-    clientKey: config.clientKey,
-    appId: config.appId,
-    chainName: config.chains[0].name,
-    chainId: config.chains[0].id,
-    securityAccount: config.securityAccount,
-    wallet: {
-      displayWalletEntry: config.particleWalletEntry.displayWalletEntry,
-      defaultWalletEntryPosition: config.particleWalletEntry.defaultWalletEntryPosition,
-      customStyle: config.particleWalletEntry.customStyle,
-    },
-  });
-
-  const u = useConnectModal()
-
-  const connectKit = useConnectKit()
+  const account = useAccount()
 
   const isMobile = useMediaQuery(468)
   const [successModel, setSuccessModel] = useState(false)
@@ -96,8 +81,29 @@ export default function Gameplay({ plot }: GameplayProp) {
       summary: ''
     }
   )
+  const bottomEl = useRef(null);
+
+  const scrollToBottom = () => {
+    // (bottomEl?.current as any).scrollIntoView({ behavior: 'smooth' });
+    setTimeout(() => {
+      const lastChildElement = (bottomEl.current as any).lastElementChild;
+      console.log(lastChildElement, bottomEl, bottomEl.current)
+      lastChildElement?.scrollIntoView({ behavior: 'smooth' });
+    }, 1000)
+  };
 
   const commandInputRef = useRef<HTMLInputElement>(null);
+  const connectKit = useConnectKit();
+  const isParticleActive = connectKit.particle.auth.isLogin();
+
+
+  const getProvider = () => {
+    if (!isParticleActive) {
+      return (window as any).phantom?.solana;
+    }
+    return null;
+  };
+
 
   async function convertTextToSpeech(text: string) {
     if (isMute) return;
@@ -115,7 +121,7 @@ export default function Gameplay({ plot }: GameplayProp) {
         console.log(bl, audioBuffer, blobUrl)
 
         if (how) {
-          how.stop();
+          how.pause();
         }
 
         var sound = new Howl({
@@ -133,7 +139,6 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   useEffect(() => {
     function handleKeyDown(e: any) {
-      console.log(e.key, options.length);
       if (commandInputRef && document && commandInputRef.current == document.activeElement) return;
 
       switch (e.key.toString().toUpperCase()) {
@@ -174,10 +179,11 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const toggleMute = () => {
     if (!isMute) {
-      if (how) how.stop()
+      if (how) how.pause()
       if (bgHow) bgHow.pause()
     } else {
       if (bgHow) bgHow.play()
+      if (how) how.play()
     }
     setIsMute(!isMute)
   }
@@ -186,19 +192,27 @@ export default function Gameplay({ plot }: GameplayProp) {
     if (!account || loading) return;
     try {
       setLoading(true)
+      const phantomProvider = getProvider();
 
       // Request message signing from the user.
       // `account` will be null if the wallet isn't connected
       if (!account) throw new Error('Wallet not connected!');
-      // `signMessage` will be undefined if the wallet doesn't support it
-      if (!signMessage) throw new Error('Wallet does not support message signing!');
+
+      const address = phantomProvider?.isPhantom ? phantomProvider.publicKey.toString() : await connectKit.particle.solana.getAddress();
+      const publicKey = new PublicKey(address);
+
       // Encode anything as bytes
       const msg = 'You are authenticating to mint the Storylok NFT on your wallet.'
       const message = new TextEncoder().encode(msg);
+
       // Sign the bytes using the wallet
-      const signature = await signMessage(message);
+      const signature = phantomProvider?.isPhantom ?
+        await phantomProvider.signMessage(message, 'utf8') :
+        await connectKit.particle.solana.signMessage(bs58.encode(message));
+
+      console.log(signature, message, publicKey.toBytes())
       // Verify that the bytes were signed using the private key that matches the known public key
-      if (!ed.verify(signature, message, account.toBytes())) throw new Error('Invalid signature!');
+      if (!ed.verify(signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
 
       // Prepare NFT Metadata.
       const { hash, json } = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary, baseline.message, conversation)
@@ -233,11 +247,11 @@ export default function Gameplay({ plot }: GameplayProp) {
     }
   }
 
-  const scrollToBottom = () => {
-    if (window && document.body) {
-      setTimeout(() => window.scroll({ behavior: 'smooth', top: document.body.scrollHeight }), 1000)
-    }
-  };
+  // const scrollToBottom = () => {
+  //   if (window && document.body) {
+  //     setTimeout(() => window.scroll({ behavior: 'smooth', top: document.body.scrollHeight }), 1000)
+  //   }
+  // };
 
   const getRandomInt = (max: number) => Math.floor(Math.random() * max);
 
@@ -303,6 +317,10 @@ Response must be in the following JSON format:
 
     console.log(msgs)
     setLoading(true)
+
+    if (how) {
+      how.pause();
+    }
 
     const response = await continueStory(msgs)
 
@@ -405,12 +423,29 @@ Response must be in the following JSON format:
       return <div className="flex flex-1 w-screen h-screen justify-center items-center">
         <img src="/l2.gif" className="h-[50vh] w-[50vh]" />
       </div>
-    return <div className='mt-28 mx-4 flex flex-col md:flex-row flex-1'>
-      <div className="pt-2 flex flex-col items-center md:flex-1 max-h-[60vh] md:max-h-[85vh] overflow-scroll">
+    return <div className='md:mt-28 mx-4 flex flex-col md:flex-row flex-1'>
+      <div ref={bottomEl} className="pt-2 flex flex-col items-center md:flex-1 h-[70vh] md:h-[85vh] overflow-scroll">
         <div className="box box1 md:max-h-fit mr-0 md:mr-4 pb-6 px-0 md:px-4">
           <div className="oddboxinner">
             <div className="text-justify text-md md:text-lg px-4">
               <h1 className="text-lg md:text-2xl font-bold">{baseline.title}</h1> <br></br>
+              {/* <TypeAnimation
+                sequence={[
+                  // Same substring at the start will only be typed out once, initially
+                  'We produce food for Mice',
+                  1000, // wait 1s before replacing "Mice" with "Hamsters"
+                  'We produce food for Hamsters',
+                  1000,
+                  'We produce food for Guinea Pigs',
+                  1000,
+                  'We produce food for Chinchillas',
+                  1000
+                ]}
+                wrapper="span"
+                speed={50}
+                style={{ fontSize: '2em', display: 'inline-block' }}
+                repeat={Infinity}
+              /> */}
               {baseline.message.split("<br/>").map((line, index) => (
                 <Fragment key={index}>
                   {line.replace("<br/>", "")}
@@ -442,13 +477,19 @@ Response must be in the following JSON format:
             </div>
           )
         })}
+        {isMobile ?
+          options.map((i, index) => {
+            return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center w-full h-full">
+              <div className="m-2 mx-0 ml-2 px-4 py-2 md:text-lg text-xs cursor-pointer rounded-xl text-white text-center bg-accent w-full hover:bg-accent-hover">{i}</div></div>
+          })
+          : <></>}
       </div>
-      <div className="px-0 py-2 pb-0 flex flex-3 flex-col items-center md:w-[30vw]">
-        <div className="box box1 max-h-fit md:fixed">
+      <div className="px-0 py-2 pb-0 flex md:flex-3 flex-col items-center w-full md:w-[30vw]">
+        <div className="box box1 max-h-fit w-full md:w-auto">
           <div className="oddboxinner px-2">
 
             <div className="flex flex-1 items-center justify-end mb-2">
-              {progress > 0 && <div onClick={openModal} className={"font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer"}>
+              {(isMobile && progress > 0) && <div onClick={openModal} className={"md:font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer"}>
                 {
                   loading ? <div className="flex flex-row">
                     <svg aria-hidden="true" className="w-6 h-6 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
@@ -479,8 +520,8 @@ Response must be in the following JSON format:
             {options.length == 0 ? <></> : <>
               <span className="md:text-2xl text-md font-bold">What's your next move?</span>
               <div className="flex flex-1 flex-row md:flex-col md:mt-4">
-                {options.map((i, index) => {
-                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center">
+                {!isMobile && options.map((i, index) => {
+                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center h-full">
                     {isMobile ? <></> : <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index].includes(') ') ? controls[index].split(') ')[1] : controls[index]}</span>}
                     <div className="m-2 mx-0 ml-2 px-4 py-2 md:text-lg text-xs cursor-pointer rounded-xl text-white bg-accent hover:bg-accent-hover">{i}</div></div>
                 })}
