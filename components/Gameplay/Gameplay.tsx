@@ -23,6 +23,7 @@ import { useAccount, useNetwork, useConnectModal, useConnectKit, useParticleConn
 import config from "../config";
 import { useWallet } from "@solana/wallet-adapter-react";
 
+
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
 type GameplayProp = {
@@ -402,9 +403,9 @@ Response must be in the following JSON format:
       return <div className="flex flex-1 w-screen h-screen justify-center items-center">
         <img src="/l2.gif" className="h-[50vh] w-[50vh]" />
       </div>
-    return <div className='mt-32 mx-4 flex flex-row flex-1'>
-      <div className="mb-8 justify-center flex flex-col items-center flex-1">
-        <div className="box box1 max-h-fit mr-4 pb-6 px-4">
+    return <div className='mt-32 mx-4 flex flex-col md:flex-row flex-1'>
+      <div className="mb-8 justify-center flex flex-col items-center md:flex-1 max-h-[80vh] overflow-scroll">
+        <div className="box box1 md:max-h-fit mr-0 md:mr-4 pb-6 px-0 md:px-4">
           <div className="oddboxinner">
             <div className="text-justify text-lg px-4">
               <h1 className="text-2xl font-bold">{baseline.title}</h1> <br></br>
@@ -421,10 +422,10 @@ Response must be in the following JSON format:
           if (i.role == 'user') return;
           return (
             <div className={`flex flex-1 justify-items-end items-end`}>
-              <div key={i.content.slice(0, 10)} className="box box1 max-h-fit mr-4 my-4 pb-4">
+              <div key={i.content.slice(0, 10)} className="box box1 max-h-fit mr-0 md:mr-4 my-4 pb-4">
                 <div className="oddboxinner">
-                  <div className="flex flex-1 mx-4 my-4 mt-6 text-lg rounded-lg p-4 justify-end text-[#25b09b]"><>{conversation[index - 1].content}</></div>
-                  <div key={i.content.slice(0, 10)} style={{ color: i.role === 'user' ? '#25b09b' : 'black' }} className={"h-auto mx-4 mb-4 rounded-lg p-4"}>
+                  <div className="flex flex-1 mx-4 my-4 mt-6 text-lg rounded-lg p-0 md:p-4 justify-end text-[#25b09b]"><>{conversation[index - 1].content}</></div>
+                  <div key={i.content.slice(0, 10)} style={{ color: i.role === 'user' ? '#25b09b' : 'black' }} className={"h-auto md:mx-4 mb-4 rounded-lg p-4"}>
                     <p className="text-justify text-lg">
                       {i.content.split("<br/>").map((line, index) => (
                         <Fragment key={index}>
@@ -441,7 +442,7 @@ Response must be in the following JSON format:
         })}
       </div>
       <div className="px-0 py-2 pb-0 flex flex-3 flex-col items-center w-[30vw]">
-        <div className="box box1 max-h-fit fixed">
+        <div className="box box1 max-h-fit md:fixed">
           <div className="oddboxinner px-2">
 
             <div className="flex flex-1 justify-end mb-2">

@@ -36,7 +36,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   return <>
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets} autoConnect>
+      <WalletProvider wallets={wallets}>
         <WalletModalProvider>
           <ModalProvider
             options={config}
@@ -44,6 +44,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             language={'en'}   //optional：localize, default en
             walletSort={['Particle Auth', 'Wallet']} //optional：walelt order
             particleAuthSort={[    //optional：display particle auth items and order
+              'particle',
               'phone',
               'google',
               'apple',
