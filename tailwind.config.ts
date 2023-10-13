@@ -15,6 +15,8 @@ const config: Config = {
       },
       colors: {
         'translucent': 'rgba(255,255,255,0.8)',
+        'accent': '#25b09b',
+        'accent-hover': '#1f9181'
       },
     },
   },

@@ -11,6 +11,7 @@ import { fetchLatestNfts } from '@/components/helpers/contract';
 import { loks } from '@/components/Gameplay/loks.json'
 import Image from 'next/image'
 import { useRouter } from 'next/router';
+import { useAccount } from '@particle-network/connect-react-ui';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -30,14 +31,12 @@ const customStyles = {
 };
 
 export default function Home() {
-  const { publicKey } = useWallet()
+  const { publicKey: account } = useWallet()
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
   const [startGame, setStartGame] = useState(false);
 
   const { push } = useRouter()
-
-  const isLoggedIn = publicKey != null
 
   function getRandomElementsFromArray(arr: any[], numberOfElements: number): any[] {
     let shuffledArray = arr.slice(); // Create a copy of the original array
@@ -64,10 +63,11 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    if (isLoggedIn) {
-      setIsOpen(true)
-    }
-  }, [isLoggedIn])
+    console.log('a', account)
+
+    const isNotLoggedIn = account == null
+    setIsOpen(!isNotLoggedIn)
+  }, [account])
 
   const startRandomGame = () => {
     setStartGame(true)

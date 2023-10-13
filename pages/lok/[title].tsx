@@ -13,6 +13,7 @@ import Image from 'next/image'
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import Gameplay from '@/components/Gameplay/Gameplay';
+import { useAccount } from 'wagmi';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -41,14 +42,14 @@ export default function Home() {
 
   const { title } = query
 
-  const { publicKey } = useWallet()
+  const account = useAccount()
 
   const [lok, setLok] = useState<string>('')
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
   const [isInvalid, setIsInvalid] = useState(true);
 
-  const isLoggedIn = publicKey != null
+  const isLoggedIn = account != null
 
   function closeModal() {
     setIsOpen(false);

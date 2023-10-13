@@ -66,7 +66,7 @@ export const mintNftOnWallet = async (reciever: string, description: string, ima
       'authorization': `Bearer ${token}`
     },
     data: {
-      name: title,
+      name: title.length < 32 ? title : title.slice(0, 28) + '...',
       symbol: 'SNC',
       description: description,
       image: image,

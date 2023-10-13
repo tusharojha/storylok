@@ -7,7 +7,10 @@ import { ChatMessage } from "../helpers/types";
 import Modal from 'react-modal';
 import { mintNftOnWallet, prepareNftMetadata } from "../helpers/contract";
 import { NFTStorage } from 'nft.storage'
-import { useWallet } from "@solana/wallet-adapter-react"
+import { } from '@particle-network/connect-react-ui'
+import { ParticleNetwork } from '@particle-network/auth'
+
+import { SolanaWallet } from "@particle-network/solana-wallet";
 
 import { Howl, Howler } from 'howler';
 import * as ed from '@noble/ed25519'
@@ -16,6 +19,9 @@ import axios from "axios";
 
 import { loks } from './loks.json'
 import { useRouter } from "next/router";
+import { useAccount, useNetwork, useConnectModal, useConnectKit, useParticleConnect, useParticleProvider } from "@particle-network/connect-react-ui";
+import config from "../config";
+import { useWallet } from "@solana/wallet-adapter-react";
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
 
@@ -43,7 +49,25 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const { push } = useRouter()
 
-  const { publicKey, disconnect, signMessage } = useWallet()
+  const { publicKey: account, signMessage } = useWallet()
+
+  const particle = new ParticleNetwork({
+    projectId: config.projectId,
+    clientKey: config.clientKey,
+    appId: config.appId,
+    chainName: config.chains[0].name,
+    chainId: config.chains[0].id,
+    securityAccount: config.securityAccount,
+    wallet: {
+      displayWalletEntry: config.particleWalletEntry.displayWalletEntry,
+      defaultWalletEntryPosition: config.particleWalletEntry.defaultWalletEntryPosition,
+      customStyle: config.particleWalletEntry.customStyle,
+    },
+  });
+
+  const u = useConnectModal()
+
+  const connectKit = useConnectKit()
 
   const [successModel, setSuccessModel] = useState(false)
   const [firstLoading, setFirstLoading] = useState(false)
@@ -156,13 +180,13 @@ export default function Gameplay({ plot }: GameplayProp) {
   }
 
   const mintNftOnChain = async () => {
-    if (!publicKey || loading) return;
+    if (!account || loading) return;
     try {
       setLoading(true)
 
       // Request message signing from the user.
-      // `publicKey` will be null if the wallet isn't connected
-      if (!publicKey) throw new Error('Wallet not connected!');
+      // `account` will be null if the wallet isn't connected
+      if (!account) throw new Error('Wallet not connected!');
       // `signMessage` will be undefined if the wallet doesn't support it
       if (!signMessage) throw new Error('Wallet does not support message signing!');
       // Encode anything as bytes
@@ -171,14 +195,12 @@ export default function Gameplay({ plot }: GameplayProp) {
       // Sign the bytes using the wallet
       const signature = await signMessage(message);
       // Verify that the bytes were signed using the private key that matches the known public key
-      if (!ed.verify(signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
-
+      if (!ed.verify(signature, message, account.toBytes())) throw new Error('Invalid signature!');
 
       // Prepare NFT Metadata.
       const { hash, json } = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary, baseline.message, conversation)
 
-
-      const mint = await mintNftOnWallet(publicKey.toString(), json.description, json.image, json.name, hash)
+      const mint = await mintNftOnWallet(account.toString(), json.description, json.image, json.name, hash)
 
       if (!mint) {
         setLoading(false)
@@ -192,7 +214,11 @@ export default function Gameplay({ plot }: GameplayProp) {
       // Change the mode that NFT minted on Solana, share your story.
       setSuccessModel(true)
       setLoading(false)
-      push(`/story/${mint.nftId}`)
+
+      setTimeout(() => {
+        push(`/story/${mint.nftId}`)
+      }, 3000)
+
       closeModal()
     } catch (e: any) {
       console.log('error minting nft', e)
@@ -267,15 +293,15 @@ Response must be in the following JSON format:
       role: 'assistant',
       content: baseline.summary ?? '',
     }, ...messages, userRequest]
-    const msgsT = [{
-      role: 'assistant',
-      content: baseline.summary ?? '',
-    }, ...messages.slice(messages.length - 2, messages.length), userRequest]
+    // const msgsT = [{
+    //   role: 'assistant',
+    //   content: baseline.summary ?? '',
+    // }, ...messages.slice(messages.length - 2, messages.length), userRequest]
 
     console.log(msgs)
     setLoading(true)
 
-    const response = await continueStory(msgsT)
+    const response = await continueStory(msgs)
 
     setUserCommand('')
     console.log(response)
@@ -441,7 +467,7 @@ Response must be in the following JSON format:
               <span className="text-2xl font-bold">What's your next move?</span>
               <div className="flex flex-1 flex-col mt-4">
                 {options.map((i, index) => {
-                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index].includes(') ') ? controls[index].split(') ')[1] : controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-[#25b09b] hover:bg-[#1f9181]">{i}</div></div>
+                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index].includes(') ') ? controls[index].split(') ')[1] : controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-accent hover:bg-accent-hover">{i}</div></div>
                 })}
               </div>
 
