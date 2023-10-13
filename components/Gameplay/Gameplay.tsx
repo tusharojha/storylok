@@ -204,15 +204,14 @@ export default function Gameplay({ plot }: GameplayProp) {
       // Encode anything as bytes
       const msg = 'You are authenticating to mint the Storylok NFT on your wallet.'
       const message = new TextEncoder().encode(msg);
-
+      console.log('hereee')
       // Sign the bytes using the wallet
       const signature = phantomProvider?.isPhantom ?
         await phantomProvider.signMessage(message, 'utf8') :
         await connectKit.particle.solana.signMessage(bs58.encode(message));
-
-      console.log(signature, message, publicKey.toBytes())
+      
       // Verify that the bytes were signed using the private key that matches the known public key
-      if (!ed.verify(signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
+      if (!ed.verify(phantomProvider?.isPhantom ? signature.signature : signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
 
       // Prepare NFT Metadata.
       const { hash, json } = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary, baseline.message, conversation)
@@ -235,7 +234,7 @@ export default function Gameplay({ plot }: GameplayProp) {
       setTimeout(() => {
         push(`/story/${mint.nftId}`)
         closeModal()
-      }, 3000)
+      }, 3500)
 
     } catch (e: any) {
       console.log('error minting nft', e)
@@ -477,12 +476,16 @@ Response must be in the following JSON format:
             </div>
           )
         })}
-        {isMobile ?
-          options.map((i, index) => {
-            return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center w-full h-full">
-              <div className="m-2 mx-0 ml-2 px-4 py-2 md:text-lg text-xs cursor-pointer rounded-xl text-white text-center bg-accent w-full hover:bg-accent-hover">{i}</div></div>
-          })
-          : <></>}
+        <div className="flex flex-col flex-1 h-full justify-end">
+          <div className="flex flex-col items-end justify-between">
+            {isMobile ?
+              options.map((i, index) => {
+                return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center w-full h-full">
+                  <div className="mb-2 mx-0 ml-2 px-4 py-2 md:text-lg text-xs cursor-pointer rounded-xl text-white text-center bg-accent w-full hover:bg-accent-hover">{i}</div></div>
+              })
+              : <></>}
+          </div>
+        </div>
       </div>
       <div className="px-0 py-2 pb-0 flex md:flex-3 flex-col items-center w-full md:w-[30vw]">
         <div className="box box1 max-h-fit w-full md:w-auto">
