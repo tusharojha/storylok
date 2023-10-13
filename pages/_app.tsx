@@ -26,14 +26,7 @@ function MyApp({ Component, pageProps }: AppProps) {
 
   const wallets = useMemo(
     () => [
-      new ParticleAdapter({
-        config: {
-          projectId: config.projectId,
-          clientKey: config.clientKey,
-          appId: config.appId,
-          chainName: 'solana',
-        }
-      }),
+      new ParticleAdapter(),
       new PhantomWalletAdapter(),
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
