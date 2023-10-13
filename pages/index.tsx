@@ -11,7 +11,6 @@ import { fetchLatestNfts } from '@/components/helpers/contract';
 import { loks } from '@/components/Gameplay/loks.json'
 import Image from 'next/image'
 import { useRouter } from 'next/router';
-import { useAccount } from '@particle-network/connect-react-ui';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');

@@ -13,7 +13,6 @@ import Image from 'next/image'
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import Gameplay from '@/components/Gameplay/Gameplay';
-import { useAccount } from 'wagmi';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -42,7 +41,7 @@ export default function Home() {
 
   const { title } = query
 
-  const account = useAccount()
+  const { publicKey: account } = useWallet()
 
   const [lok, setLok] = useState<string>('')
   const [nfts, setNfts] = useState<any[]>([])
