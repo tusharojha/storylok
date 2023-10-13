@@ -34,6 +34,17 @@
   }
 }
 
+.hideOnMobile {
+  display: block;
+}
+
+@media screen and (max-width: 768px) {
+  .hideOnMobile {
+    display: hidden;
+  }
+  
+}
+
 .wallet-adapter-button-trigger {
   background-color: #512da8 !important;
 }

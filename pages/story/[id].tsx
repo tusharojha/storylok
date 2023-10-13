@@ -116,7 +116,7 @@ export default function StoryPage(props: StoryPageProps) {
           </div>
         </> :
         <div className="mb-8 justify-center flex flex-col items-center flex-1">
-          <div className="box box1 max-h-fit mr-4 pb-6 px-4">
+          <div className="box box1 max-h-fit md:mr-4 mr-0 pb-6 px-4">
             <div className="oddboxinner">
               <div className="text-justify text-lg px-4">
                 <h1 className="text-2xl font-bold">{nft.name}</h1> <br></br>
@@ -133,7 +133,7 @@ export default function StoryPage(props: StoryPageProps) {
             if (i.role == 'user') return;
             return (
               <div className={`flex flex-1 justify-items-end items-end`}>
-                <div key={i.content.slice(0, 10)} className="box box1 max-h-fit mr-4 my-4 pb-4">
+                <div key={i.content.slice(0, 10)} className="box box1 max-h-fit md:mr-4 mr-0 my-4 pb-4">
                   <div className="oddboxinner">
                     <div className="flex flex-1 mx-4 my-4 mt-6 text-lg rounded-lg p-4 justify-end text-[#25b09b]"><>{conversation[index - 1].content}</></div>
                     <div key={i.content.slice(0, 10)} style={{ color: i.role === 'user' ? '#25b09b' : 'black' }} className={"h-auto mx-4 mb-4 rounded-lg p-4"}>

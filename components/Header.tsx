@@ -3,7 +3,6 @@ import dynamic from "next/dynamic";
 import Link from "next/link"
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
-import { ConnectWallet } from "./ConnectWallet";
 const WalletSolButton = dynamic(async () => (await import('@solana/wallet-adapter-react-ui')).WalletMultiButton, { ssr: false })
 const Header = () => {
   const {publicKey: account} = useWallet()
@@ -27,8 +26,8 @@ const Header = () => {
       </div>
     </div>
     <div className="flex-none">
-      <ConnectWallet />
-      {/* <WalletSolButton /> */}
+      {/* <ConnectWallet /> */}
+      <WalletSolButton />
     </div>
   </div>
 }

@@ -22,6 +22,7 @@ import { useRouter } from "next/router";
 import { useAccount, useNetwork, useConnectModal, useConnectKit, useParticleConnect, useParticleProvider } from "@particle-network/connect-react-ui";
 import config from "../config";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { useMediaQuery } from "../helpers/hooks";
 
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
@@ -70,6 +71,7 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const connectKit = useConnectKit()
 
+  const isMobile = useMediaQuery(468)
   const [successModel, setSuccessModel] = useState(false)
   const [firstLoading, setFirstLoading] = useState(false)
   const [isMute, setIsMute] = useState(false)
@@ -218,9 +220,9 @@ export default function Gameplay({ plot }: GameplayProp) {
 
       setTimeout(() => {
         push(`/story/${mint.nftId}`)
+        closeModal()
       }, 3000)
 
-      closeModal()
     } catch (e: any) {
       console.log('error minting nft', e)
       if (e?.message) {
@@ -403,12 +405,12 @@ Response must be in the following JSON format:
       return <div className="flex flex-1 w-screen h-screen justify-center items-center">
         <img src="/l2.gif" className="h-[50vh] w-[50vh]" />
       </div>
-    return <div className='mt-32 mx-4 flex flex-col md:flex-row flex-1'>
-      <div className="mb-8 justify-center flex flex-col items-center md:flex-1 max-h-[80vh] overflow-scroll">
+    return <div className='mt-28 mx-4 flex flex-col md:flex-row flex-1'>
+      <div className="pt-2 flex flex-col items-center md:flex-1 max-h-[60vh] md:max-h-[85vh] overflow-scroll">
         <div className="box box1 md:max-h-fit mr-0 md:mr-4 pb-6 px-0 md:px-4">
           <div className="oddboxinner">
-            <div className="text-justify text-lg px-4">
-              <h1 className="text-2xl font-bold">{baseline.title}</h1> <br></br>
+            <div className="text-justify text-md md:text-lg px-4">
+              <h1 className="text-lg md:text-2xl font-bold">{baseline.title}</h1> <br></br>
               {baseline.message.split("<br/>").map((line, index) => (
                 <Fragment key={index}>
                   {line.replace("<br/>", "")}
@@ -424,9 +426,9 @@ Response must be in the following JSON format:
             <div className={`flex flex-1 justify-items-end items-end`}>
               <div key={i.content.slice(0, 10)} className="box box1 max-h-fit mr-0 md:mr-4 my-4 pb-4">
                 <div className="oddboxinner">
-                  <div className="flex flex-1 mx-4 my-4 mt-6 text-lg rounded-lg p-0 md:p-4 justify-end text-[#25b09b]"><>{conversation[index - 1].content}</></div>
+                  <div className="flex flex-1 mx-4 my-4 mt-6 md:text-lg rounded-lg p-0 md:p-4 justify-end text-[#25b09b]"><>{conversation[index - 1].content}</></div>
                   <div key={i.content.slice(0, 10)} style={{ color: i.role === 'user' ? '#25b09b' : 'black' }} className={"h-auto md:mx-4 mb-4 rounded-lg p-4"}>
-                    <p className="text-justify text-lg">
+                    <p className="text-justify md:text-lg">
                       {i.content.split("<br/>").map((line, index) => (
                         <Fragment key={index}>
                           {line.replace("<br/>", "")}
@@ -441,21 +443,12 @@ Response must be in the following JSON format:
           )
         })}
       </div>
-      <div className="px-0 py-2 pb-0 flex flex-3 flex-col items-center w-[30vw]">
+      <div className="px-0 py-2 pb-0 flex flex-3 flex-col items-center md:w-[30vw]">
         <div className="box box1 max-h-fit md:fixed">
           <div className="oddboxinner px-2">
 
-            <div className="flex flex-1 justify-end mb-2">
-              <span onClick={toggleMute} className="hover:text-gray-600 cursor-pointer">{isMute ? 'Unmute 🔇' : 'Mute 🔊'}</span>
-            </div>
-
-            {/* Progress Bar */}
-            <div className={"flex flex-1 px-0 justify-between mb-8 " + (options?.length == 0 ? "flex-col items-center min-w-[20vw]" : "flex-row items-end")}>
-              <div className="flex flex-1 flex-col">
-                <h1 className="text-xl">Progress</h1>
-                <div style={{ backgroundSize: (options.length == 0 ? 100 : progress) + '%' }} className={"progress-7" + (options?.length == 0 ? "  min-w-[20vw]" : "")}></div>
-              </div>
-              {progress > 0 && <div onClick={openModal} className={"font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer" + (options?.length == 0 ? " mt-4 px-2" : "")}>
+            <div className="flex flex-1 items-center justify-end mb-2">
+              {progress > 0 && <div onClick={openModal} className={"font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer"}>
                 {
                   loading ? <div className="flex flex-row">
                     <svg aria-hidden="true" className="w-6 h-6 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
@@ -463,12 +456,33 @@ Response must be in the following JSON format:
                   </div> : 'Save Game NFT'
                 }
               </div>}
+              <span onClick={toggleMute} className="ml-2 hover:text-gray-600 cursor-pointer">{isMute ? 'Unmute 🔇' : 'Mute 🔊'}</span>
             </div>
+
+            {/* Progress Bar */}
+            {isMobile ? <></> :
+              <div className={"flex flex-1 px-0 justify-between md:mb-8 " + (options?.length == 0 ? "flex-col items-center min-w-[20vw]" : "flex-row items-end")}>
+                <div className="flex flex-1 flex-col">
+                  <h1 className="text-xl">Progress</h1>
+                  <div style={{ backgroundSize: (options.length == 0 ? 100 : progress) + '%' }} className={"progress-7" + (options?.length == 0 ? "  min-w-[20vw]" : "")}></div>
+                </div>
+                {progress > 0 && <div onClick={openModal} className={"font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer" + (options?.length == 0 ? " mt-4 px-2" : "")}>
+                  {
+                    loading ? <div className="flex flex-row">
+                      <svg aria-hidden="true" className="w-6 h-6 text-white animate-spin fill-black" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" /><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" /></svg>
+                      <h1 className="ml-2">Loading</h1>
+                    </div> : 'Save Game NFT'
+                  }
+                </div>}
+
+              </div>}
             {options.length == 0 ? <></> : <>
-              <span className="text-2xl font-bold">What's your next move?</span>
-              <div className="flex flex-1 flex-col mt-4">
+              <span className="md:text-2xl text-md font-bold">What's your next move?</span>
+              <div className="flex flex-1 flex-row md:flex-col md:mt-4">
                 {options.map((i, index) => {
-                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center"> <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index].includes(') ') ? controls[index].split(') ')[1] : controls[index]}</span> <div className="m-2 mx-0 ml-2 px-4 py-2 text-lg cursor-pointer rounded-xl text-white bg-accent hover:bg-accent-hover">{i}</div></div>
+                  return <div onClick={() => takeActionWithPrompt(i)} className="flex flex-row items-center">
+                    {isMobile ? <></> : <span className="bg-[#e5e7eb] p-2 rounded-md">{controls[index].includes(') ') ? controls[index].split(') ')[1] : controls[index]}</span>}
+                    <div className="m-2 mx-0 ml-2 px-4 py-2 md:text-lg text-xs cursor-pointer rounded-xl text-white bg-accent hover:bg-accent-hover">{i}</div></div>
                 })}
               </div>
 
@@ -499,7 +513,7 @@ Response must be in the following JSON format:
           </div>
         </div>
       </div>
-    </div>
+    </div >
   }
 
   const shareOnX = () => {
@@ -531,10 +545,10 @@ Response must be in the following JSON format:
       style={customStyles}
       contentLabel="NFT Modal"
     >
-      <div className="flex w-[50vw] flex-col justify-center items-center">
-        <div className="flex flex-1 flex-row justify-center items-center">
+      <div className="flex md:w-[50vw] w-[80vw] flex-col justify-center items-center">
+        <div className="flex flex-1 md:flex-row flex-col justify-center items-center">
           <img className="boxNoColor box1 w-64 rounded-md" src={base64Image} alt="NFT Image" />
-          <div className="text-left px-4">
+          <div className="text-left mt-2 md:mt-0 px-4">
             <h1 className="text-xl font-bold">{baseline.title}</h1>
             <p className="py-2 max-lines-2">{baseline.summary}</p>
             <div className="mt-2">
