@@ -3,6 +3,7 @@ import Image from 'next/image'
 import { NextSeo } from "next-seo"
 import axios from "axios"
 import { ChatMessage } from "@/components/helpers/types"
+import { useMediaQuery } from "@/components/helpers/hooks"
 
 type StoryPageProps = {
   nftExists: boolean
@@ -13,6 +14,7 @@ export default function StoryPage(props: StoryPageProps) {
   const { nftExists, nft } = props
   const [loadingContent, setLoadingContent] = useState(true)
 
+  const isMobile = useMediaQuery(468)
   const [conversation, setConversation] = useState<ChatMessage[]>([])
   const [message, setMessage] = useState<string>('')
   const [copyBtText, setCopyBtnText] = useState('Copy Link')
@@ -24,6 +26,20 @@ export default function StoryPage(props: StoryPageProps) {
     setTimeout(() => {
       setCopyBtnText('Copy Link')
     }, 2000)
+  }
+
+  const shareOnW = () => {
+    // Define the tweet text and image URL
+    const tweetText = `Hey, I just played ${nft.name} on Storylok, a story based NFT game on Solana that lets you explore AI-crafted realms.\n\nCheckout my story: https://storylok.xyz/story/${nft.id}`;
+
+    // Encode the tweet text and image URL for the Twitter share URL
+    const encodedTweetText = encodeURIComponent(tweetText);
+
+    // Create the Twitter share URL
+    const twitterShareUrl = `whatsapp://send?text=${encodedTweetText}`;
+
+    // Open Twitter in a new window or tab
+    window.open(twitterShareUrl, '_blank');
   }
 
   const shareOnX = () => {
@@ -160,11 +176,14 @@ export default function StoryPage(props: StoryPageProps) {
             <p onClick={openWalletOnSolscan} className="text-md text-[#25b09b] hover:text-[#1f9181] cursor-pointer">{`Owner: ${nft.ownerAddress.slice(0, 4)}...${nft.ownerAddress.slice(nft.ownerAddress.length - 4, nft.ownerAddress.length)}`}</p>
             <h1 className="text-2xl font-bold">{nft.name}</h1>
             <p className="textClamp">{nft.description}</p>
-            <div className="flex flex-row">
+            <div className="flex md:flex-row flex-col">
               <div onClick={shareOnX} className={"my-2 hover:bg-gray-100 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer"}>
                 Share on 𝕏
               </div>
-              <div onClick={copyToClipboard} className={"my-2 ml-2 hover:bg-gray-100 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer"}>
+              {isMobile && <div onClick={shareOnW} className={"my-2 hover:bg-gray-100 md:ml-2 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer flex flex-row items-center"}>
+                Share on <img src="/logos/whatsapp.png" className="ml-2 h-6 w-6" />
+              </div>}
+              <div onClick={copyToClipboard} className={"my-2 md:ml-2 hover:bg-gray-100 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer"}>
                 {copyBtText}
               </div>
             </div>

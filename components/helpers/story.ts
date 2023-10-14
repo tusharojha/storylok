@@ -1,6 +1,8 @@
 import axios from "axios";
 import { Configuration, OpenAIApi } from "openai";
 
+import loks from '@/components/Gameplay/loks.json'
+
 const configuration = new Configuration({
   apiKey: process.env.NEXT_PUBLIC_OPENAI_API_KEY,
 });
@@ -93,6 +95,54 @@ export const createImagePrompt = async (messages: any) => {
   return chat.message?.content;
 }
 
+export const textToImage = async (prompt: string, lok: typeof loks.loks[0]) => {
+  const path =
+    "https://api.stability.ai/v1/generation/stable-diffusion-xl-1024-v1-0/text-to-image";
+
+  const headers = {
+    Accept: "application/json",
+    Authorization: `Bearer ${process.env.NEXT_PUBLIC_STABILITY}`
+  };
+
+  const body = {
+    steps: 40,
+    width: 1024,
+    height: 1024,
+    seed: 0,
+    cfg_scale: 5,
+    samples: 1,
+    style_preset: "anime",
+    text_prompts: [
+      {
+        "text": prompt,
+        "weight": 1
+      },
+      {
+        "text": "blurry, bad",
+        "weight": -1
+      }
+    ],
+  };
+
+  const options = {
+    url: path,
+    method: "POST",
+    headers,
+    data: body
+  }
+
+  const response = await axios(options)
+
+  if (response.status != 200) {
+    throw new Error(`Non-200 response: ${await response}`)
+  }
+
+  const responseJSON = await response.data;
+
+  console.log(responseJSON)
+  return responseJSON.artifacts[0].base64
+};
+
 export const createImage = async (prompt: string) => {
   const response = await openai.createImage({
     prompt,
@@ -100,6 +150,8 @@ export const createImage = async (prompt: string) => {
     size: "512x512",
   })
   console.log(response.data.data[0])
+
+
   return response.data.data[0].url
 }
 

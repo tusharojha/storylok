@@ -2,7 +2,7 @@
 
 import Head from "next/head";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { continueStory, createImage, createImagePrompt, getImageData, startNewStory } from "../helpers/story";
+import { continueStory, createImage, createImagePrompt, getImageData, startNewStory, textToImage } from "../helpers/story";
 import { ChatMessage } from "../helpers/types";
 import Modal from 'react-modal';
 import { mintNftOnWallet, prepareNftMetadata } from "../helpers/contract";
@@ -56,10 +56,12 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const account = useAccount()
 
+  const [selectedLok, setLok] = useState<typeof loks[0]>(loks[0])
   const isMobile = useMediaQuery(468)
   const [successModel, setSuccessModel] = useState(false)
   const [firstLoading, setFirstLoading] = useState(false)
   const [isMute, setIsMute] = useState(false)
+  const [isBgMute, setIsBgMute] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [userCommand, setUserCommand] = useState('')
@@ -166,6 +168,20 @@ export default function Gameplay({ plot }: GameplayProp) {
     }
   }, [options]);
 
+  const shareOnW = () => {
+    // Define the tweet text and image URL
+    const tweetText = `Hey, I just played ${baseline.title} on Storylok, a story based NFT game on Solana that lets you explore AI-crafted realms.\n\nCheckout my story: https://storylok.xyz/story/${mint!.nftId}`;
+
+    // Encode the tweet text and image URL for the Twitter share URL
+    const encodedTweetText = encodeURIComponent(tweetText);
+
+    // Create the Twitter share URL
+    const twitterShareUrl = `whatsapp://send?text=${encodedTweetText}`;
+
+    // Open Twitter in a new window or tab
+    window.open(twitterShareUrl, '_blank');
+  }
+
   async function openModal() {
     setLoading(true)
     await generateImage()
@@ -179,13 +195,21 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const toggleMute = () => {
     if (!isMute) {
-      if (how) how.pause()
-      if (bgHow) bgHow.pause()
+      if (how) how.stop()
     } else {
-      if (bgHow) bgHow.play()
       if (how) how.play()
     }
     setIsMute(!isMute)
+  }
+
+  const toggleBgMute = () => {
+    if (!bgHow) return;
+
+    if (!isBgMute) {
+      bgHow.pause();
+    } else {
+      bgHow?.play();
+    }
   }
 
   const mintNftOnChain = async () => {
@@ -209,7 +233,7 @@ export default function Gameplay({ plot }: GameplayProp) {
       const signature = phantomProvider?.isPhantom ?
         await phantomProvider.signMessage(message, 'utf8') :
         await connectKit.particle.solana.signMessage(bs58.encode(message));
-      
+
       // Verify that the bytes were signed using the private key that matches the known public key
       if (!ed.verify(phantomProvider?.isPhantom ? signature.signature : signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
 
@@ -232,9 +256,9 @@ export default function Gameplay({ plot }: GameplayProp) {
       setLoading(false)
 
       setTimeout(() => {
-        push(`/story/${mint.nftId}`)
-        closeModal()
-      }, 3500)
+        // push(`/story/${mint.nftId}`)
+        // closeModal()
+      }, 5000)
 
     } catch (e: any) {
       console.log('error minting nft', e)
@@ -270,7 +294,9 @@ export default function Gameplay({ plot }: GameplayProp) {
       setBgHow(sound)
 
       // Randomly pick a lok aka storyplot.
-      const lok = plot ?? loks[getRandomInt(loks.length)].plot
+      const lk = getRandomInt(loks.length)
+      const lok = plot ?? loks[lk].plot
+      setLok(loks[lk])
 
       let story = await startNewStory(lok)
       if (!story) {
@@ -309,10 +335,6 @@ Response must be in the following JSON format:
       role: 'assistant',
       content: baseline.summary ?? '',
     }, ...messages, userRequest]
-    // const msgsT = [{
-    //   role: 'assistant',
-    //   content: baseline.summary ?? '',
-    // }, ...messages.slice(messages.length - 2, messages.length), userRequest]
 
     console.log(msgs)
     setLoading(true)
@@ -378,16 +400,12 @@ Response must be in the following JSON format:
       console.log(response)
 
       if (response) {
-        const data = await createImage('realistic image for ' + response)
+        const data = await textToImage(response, selectedLok)
         console.log('data', data)
 
         if (data) {
-          const bufferData = await getImageData(data)
-          console.log(bufferData['base64'])
-
-
           // Convert base64 to binary
-          const binaryData = atob(bufferData['base64']);
+          const binaryData = atob(data);
 
           // Create a Uint8Array from the binary data
           const uint8Array = new Uint8Array(binaryData.length);
@@ -405,7 +423,7 @@ Response must be in the following JSON format:
 
           const cfid = await client.storeBlob(file)
           setImageIpfs(cfid)
-          setBase64Image('data:image/png;base64,' + bufferData['base64']);
+          setBase64Image('data:image/png;base64,' + data);
         }
       }
     } catch (e) {
@@ -500,6 +518,7 @@ Response must be in the following JSON format:
                   </div> : 'Save Game NFT'
                 }
               </div>}
+              <span onClick={toggleBgMute} className="ml-2 hover:text-gray-600 cursor-pointer">{isMute ? 'bg 🔇' : 'bg 🔊'}</span>
               <span onClick={toggleMute} className="ml-2 hover:text-gray-600 cursor-pointer">{isMute ? 'Unmute 🔇' : 'Mute 🔊'}</span>
             </div>
 
@@ -588,6 +607,8 @@ Response must be in the following JSON format:
       onRequestClose={closeModal}
       style={customStyles}
       contentLabel="NFT Modal"
+      shouldCloseOnOverlayClick={successModel}
+      shouldCloseOnEsc={successModel}
     >
       <div className="flex md:w-[50vw] w-[80vw] flex-col justify-center items-center">
         <div className="flex flex-1 md:flex-row flex-col justify-center items-center">
@@ -595,9 +616,12 @@ Response must be in the following JSON format:
           <div className="text-left mt-2 md:mt-0 px-4">
             <h1 className="text-xl font-bold">{baseline.title}</h1>
             <p className="py-2 max-lines-2">{baseline.summary}</p>
-            <div className="mt-2">
+            <div className="mt-2 flex flex-row">
               {/* if there is a button in div, it will close the modal */}
               {successModel ? <button disabled={loading} onClick={() => shareOnX()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">Share on 𝕏</button> : <button disabled={loading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{loading ? 'loading...' : 'Mint NFT'}</button>}
+              {(successModel && isMobile) && <div onClick={shareOnW} className={"hover:bg-gray-100 md:ml-2 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer flex flex-row items-center"}>
+                Share on <img src="/logos/whatsapp.png" className="ml-2 h-6 w-6" />
+              </div>}
             </div>
           </div>
         </div>
