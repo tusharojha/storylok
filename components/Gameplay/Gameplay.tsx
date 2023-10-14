@@ -256,9 +256,10 @@ export default function Gameplay({ plot }: GameplayProp) {
       setLoading(false)
 
       setTimeout(() => {
+        push('/')
         // push(`/story/${mint.nftId}`)
         // closeModal()
-      }, 5000)
+      }, 6000)
 
     } catch (e: any) {
       console.log('error minting nft', e)
@@ -591,7 +592,7 @@ Response must be in the following JSON format:
 
     // Open Twitter in a new window or tab
     window.open(twitterShareUrl, '_blank');
-    closeModal()
+    // closeModal()
   }
 
 
@@ -619,7 +620,7 @@ Response must be in the following JSON format:
             <div className="mt-2 flex flex-row">
               {/* if there is a button in div, it will close the modal */}
               {successModel ? <button disabled={loading} onClick={() => shareOnX()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">Share on 𝕏</button> : <button disabled={loading} onClick={() => mintNftOnChain()} className="font-bold text-md rounded-xl p-2 border-2 cursor-pointer">{loading ? 'loading...' : 'Mint NFT'}</button>}
-              {(successModel && isMobile) && <div onClick={shareOnW} className={"hover:bg-gray-100 md:ml-2 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer flex flex-row items-center"}>
+              {(successModel && isMobile) && <div onClick={shareOnW} className={"hover:bg-gray-100 md:ml-2 mx-2 font-bold text-lg rounded-xl p-2 border-2 cursor-pointer flex flex-row items-center"}>
                 Share on <img src="/logos/whatsapp.png" className="ml-2 h-6 w-6" />
               </div>}
             </div>
