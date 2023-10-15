@@ -34,6 +34,7 @@
     "howler": "^2.2.4",
     "lodash": "^4.17.21",
     "lodash.merge": "^4.6.2",
+    "mixpanel-browser": "^2.47.0",
     "next": "13.4.13",
     "next-seo": "^6.1.0",
     "nft.storage": "^7.1.1",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@types/howler": "^2.2.9",
     "@types/lodash.merge": "^4.6.7",
+    "@types/mixpanel-browser": "^2.47.3",
     "@types/react-modal": "^3.16.0"
   }
 }

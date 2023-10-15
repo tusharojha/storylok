@@ -11,24 +11,46 @@ const openai = new OpenAIApi(configuration);
 
 let storyPlot = ''
 
-const systemRecord = () => `You are an excellent story teller, place the user as the main character of story and write in that context. Consider the following initial plot:
+const systemRecord = () => `you are an excellent story teller, and the user is the main character of story. write the story in that figure of speech, considering the following initial plot:
 
 ${storyPlot}
 
-Drive the story into continuously by asking the user / player input after every plot to take an action about what's next step the player want to take and give some suggestions according to format.
+Drive the story and continuously ask the user for input after every plot turn to take an action that can lead to dramatic turns in the story based on the next step the user may take.
 
 Make sure to:
-- always confine the users into the scope of the story
-- avoid accepting users request to going out of the story bounds and escaping the physical realities
+- give names to characters
+- make sure to give options in the response format.
+- go in details like telling numbers where needed
+- avoid accepting users request to escaping the physical realities
 
-Always give response in the following json format:
+Always give response in the json format:
 { 
-    "title": "the title of the story, think of very innovative one",
-    "summary": "a very short summary under 200 words about the story plot",
-    "message": "the story data that you generated based on user actions, should be under 300 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
-    "options": ["option a", "option b", "option c"]
+    "title": "a related title of the story",
+    "options": ["option a", "option b", "option c"],
+    "message": "the story data that you generated based on user actions, should be under 100 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
 }
 `
+
+export const generateSummary = async (messages: any[]) => {
+  const chat_completion = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [{
+      'role': 'system',
+      'content': systemRecord()
+    }, ...(messages as any)],
+    temperature: 0.4,
+    max_tokens: 300
+  });
+
+  console.log('c', chat_completion)
+  const chat = chat_completion.data.choices[0]
+  try {
+    const d = chat.message?.content;
+    return d;
+  } catch (e) {
+    console.log(e)
+  }
+}
 
 export const startNewStory = async (sp: string) => {
   storyPlot = sp
@@ -57,7 +79,6 @@ export const startNewStory = async (sp: string) => {
 
 
 export const continueStory = async (messages: any) => {
-  console.log([systemRecord(), ...(messages as any)])
   const chat_completion = await openai.createChatCompletion({
     model: "gpt-3.5-turbo",
     messages: [{
@@ -118,7 +139,7 @@ export const textToImage = async (prompt: string, lok: typeof loks.loks[0]) => {
         "weight": 1
       },
       {
-        "text": "blurry, bad",
+        "text": "blurry, bad, black and white",
         "weight": -1
       }
     ],

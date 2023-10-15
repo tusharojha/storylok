@@ -2,17 +2,12 @@
 
 import Head from "next/head";
 import { Fragment, useEffect, useRef, useState } from "react";
-import { continueStory, createImage, createImagePrompt, getImageData, startNewStory, textToImage } from "../helpers/story";
+import { continueStory, createImage, createImagePrompt, generateSummary, getImageData, startNewStory, textToImage } from "../helpers/story";
 import { ChatMessage } from "../helpers/types";
 import Modal from 'react-modal';
 import { mintNftOnWallet, prepareNftMetadata } from "../helpers/contract";
 import { NFTStorage } from 'nft.storage'
 import { } from '@particle-network/connect-react-ui'
-import { ParticleNetwork } from '@particle-network/auth'
-
-import { SolanaWallet } from "@particle-network/solana-wallet";
-
-import TypeAnimation from 'react-type-animation'
 import { Howl, Howler } from 'howler';
 import * as ed from '@noble/ed25519'
 import { sha512 } from "@noble/hashes/sha512";
@@ -21,8 +16,6 @@ import axios from "axios";
 import { loks } from './loks.json'
 import { useRouter } from "next/router";
 import { useAccount, useNetwork, useConnectModal, useConnectKit, useParticleConnect, useParticleProvider } from "@particle-network/connect-react-ui";
-import config from "../config";
-import { useWallet } from "@solana/wallet-adapter-react";
 import bs58 from 'bs58';
 import { useMediaQuery } from "../helpers/hooks";
 import { PublicKey } from '@solana/web3.js'
@@ -34,7 +27,7 @@ type GameplayProp = {
   plot?: string
 }
 
-const NFT_THRESHOLD = 4
+const NFT_THRESHOLD = 25
 const controls = ['A', 'B', 'C']
 
 const customStyles = {
@@ -57,6 +50,7 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const account = useAccount()
 
+  const { connect, disconnect } = useParticleConnect();
   const [selectedLok, setLok] = useState<typeof loks[0]>(loks[0])
   const isMobile = useMediaQuery(468)
   const [successModel, setSuccessModel] = useState(false)
@@ -123,8 +117,8 @@ export default function Gameplay({ plot }: GameplayProp) {
         const blobUrl = URL.createObjectURL(bl)
         console.log(bl, audioBuffer, blobUrl)
 
-        if (how) {
-          how.pause();
+        if (how && how.playing()) {
+          how.stop();
         }
 
         var sound = new Howl({
@@ -257,10 +251,9 @@ export default function Gameplay({ plot }: GameplayProp) {
       setLoading(false)
 
       setTimeout(() => {
+        disconnect()
         push('/')
-        // push(`/story/${mint.nftId}`)
-        // closeModal()
-      }, 6000)
+      }, 10000)
 
     } catch (e: any) {
       console.log('error minting nft', e)
@@ -271,12 +264,6 @@ export default function Gameplay({ plot }: GameplayProp) {
       setLoading(false)
     }
   }
-
-  // const scrollToBottom = () => {
-  //   if (window && document.body) {
-  //     setTimeout(() => window.scroll({ behavior: 'smooth', top: document.body.scrollHeight }), 1000)
-  //   }
-  // };
 
   const getRandomInt = (max: number) => Math.floor(Math.random() * max);
 
@@ -307,8 +294,8 @@ export default function Gameplay({ plot }: GameplayProp) {
       setLoading(false)
       setFirstLoading(false)
       if (story && story.title) {
-        setBaseline({ title: story.title, summary: story.summary, message: story.message })
-        setOptions(story.options)
+        setBaseline({ title: story.title, summary: '', message: story.message }) // TODO: add summary.
+        setOptions(story.options) //TODO: add options.
         convertTextToSpeech(story.message)
       }
     }
@@ -318,55 +305,60 @@ export default function Gameplay({ plot }: GameplayProp) {
   }, [])
 
   const takeAction = async (action?: string) => {
-    // if (loading) return;
-    if (userCommand.trim() == "" && !action) return;
+    try {
+      // if (loading) return;
+      if (userCommand.trim() == "" && !action) return;
 
-    const userRequest = {
-      role: 'user',
-      content: `User takes the action: ${action ?? userCommand}
+      const userRequest = {
+        role: 'user',
+        content: `User takes the action: ${action ?? userCommand}
 
 Response must be in the following JSON format:
 { 
-    "message": "the story data that you generated based on user actions. Generate upto 30 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
+    "message": "the story data that you generated based on user actions. Generate upto 120 words. Use "<br/>" tag where you want new line. Avoid using double quotes.",
     "options": ["option a", "option b", "option c"]
 }
       `
-    }
+      }
 
-    const msgs = [{
-      role: 'assistant',
-      content: baseline.summary ?? '',
-    }, ...messages, userRequest]
-
-    console.log(msgs)
-    setLoading(true)
-
-    if (how) {
-      how.pause();
-    }
-
-    const response = await continueStory(msgs)
-
-    setUserCommand('')
-    console.log(response)
-    setMessages([...msgs, userRequest, {
-      role: 'assistant',
-      content: JSON.stringify(response) ?? ''
-    }])
-    setConversation([
-      ...conversation,
-      {
-        role: 'user',
-        content: action ?? userCommand
-      },
-      {
+      const msgs = [{
         role: 'assistant',
-        content: response.message ?? ''
+        content: baseline.summary ?? '',
+      }, ...messages, userRequest]
+
+      console.log(msgs)
+      setLoading(true)
+
+      if (how) {
+        how.pause();
+      }
+
+      const response = await continueStory(msgs)
+
+      setUserCommand('')
+      console.log(response)
+      setMessages([...msgs, userRequest, {
+        role: 'assistant',
+        content: JSON.stringify(response) ?? ''
       }])
-    setOptions(response.options)
-    setLoading(false)
-    convertTextToSpeech(response.message)
-    scrollToBottom()
+      setConversation([
+        ...conversation,
+        {
+          role: 'user',
+          content: action ?? userCommand
+        },
+        {
+          role: 'assistant',
+          content: response.message ?? ''
+        }])
+      setOptions(response.options)
+      setLoading(false)
+      convertTextToSpeech(response.message)
+      scrollToBottom()
+    } catch (e) {
+      console.log(e)
+      takeAction(action)
+    }
   }
 
   const takeActionWithPrompt = (action: string) => {
@@ -398,6 +390,14 @@ Response must be in the following JSON format:
       setLoading(true)
 
       const response = await createImagePrompt(msgs)
+      const summary = await generateSummary([...msgs.slice(0, msgs.length - 1), {
+        role: 'user',
+        content: `Create a 100 word summary from the conversation till now, covering important turn of events. A simple string no format to follow.`
+      }])
+
+      if (summary) {
+        setBaseline({ ...baseline, summary: summary })
+      }
 
       console.log(response)
 
@@ -529,7 +529,7 @@ Response must be in the following JSON format:
               <div className={"flex flex-1 px-0 justify-between md:mb-8 " + (options?.length == 0 ? "flex-col items-center min-w-[20vw]" : "flex-row items-end")}>
                 <div className="flex flex-1 flex-col">
                   <h1 className="text-xl">Progress</h1>
-                  <div style={{ backgroundSize: (options.length == 0 ? 100 : progress) + '%' }} className={"progress-7" + (options?.length == 0 ? "  min-w-[20vw]" : "")}></div>
+                  <div style={{ backgroundSize: (options && options.length == 0 ? 100 : progress) + '%' }} className={"progress-7" + (options?.length == 0 ? "  min-w-[20vw]" : "")}></div>
                 </div>
                 {progress > NFT_THRESHOLD && <div onClick={openModal} className={"font-bold hover:bg-gray-100 text-md rounded-xl p-2 border-2 cursor-pointer" + (options?.length == 0 ? " mt-4 px-2" : "")}>
                   {
@@ -541,7 +541,7 @@ Response must be in the following JSON format:
                 </div>}
 
               </div>}
-            {options.length == 0 ? <></> : <>
+            {options && options.length == 0 ? <></> : <>
               <span className="md:text-2xl text-md font-bold">What's your next move?</span>
               <div className="flex flex-1 flex-row md:flex-col md:mt-4">
                 {!isMobile && options.map((i, index) => {

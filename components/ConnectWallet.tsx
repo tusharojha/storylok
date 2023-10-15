@@ -12,7 +12,7 @@ export const ConnectWallet = () => {
           <button
             className="px-4 py-2 bg-accent hover:bg-accent-hover text-white text-lg rounded-md"
             onClick={account ? openAccountModal : openConnectModal}>
-            {account ? `Player: ${addressTrim(account)}` : 'Start Game'}
+            {account ? `${addressTrim(account)}` : 'Start Game'}
           </button>
         </div>
       );

@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 import { fetchLatestNfts } from '@/components/helpers/contract';
 import { loks } from '@/components/Gameplay/loks.json'
 import Image from 'next/image'
+import mixpanel from 'mixpanel-browser'
 import { useRouter } from 'next/router';
 import { useAccount } from '@particle-network/connect-react-ui';
 
@@ -72,6 +73,11 @@ export default function Home() {
   }
 
   const startCustomGame = (title: string) => {
+
+    mixpanel.track('Start Game', {
+      'isCustomGame': true,
+      'lok': title 
+    })
     push(`/lok/${title}`)
   }
 

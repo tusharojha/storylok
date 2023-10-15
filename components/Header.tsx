@@ -4,16 +4,40 @@ import Link from "next/link"
 import { useRouter } from "next/router";
 import { useEffect, useState } from "react";
 import { ConnectWallet } from "./ConnectWallet";
-import { useAccount } from "@particle-network/connect-react-ui";
+import mixpanel from 'mixpanel-browser'
+import { useAccount, useConnectKit } from "@particle-network/connect-react-ui";
 
 const Header = () => {
   const account = useAccount()
   const [loggedIn, setIsLoggedIn] = useState(false)
 
+  const connectKit = useConnectKit();
+  const isParticleActive = connectKit.particle?.auth.isLogin();
+
+  const getProvider = () => {
+    if (!isParticleActive) {
+      return (window as any).phantom?.solana;
+    }
+    return null;
+  };
+
+
   useEffect(() => {
 
     const isNotLoggedIn = account == undefined || account.length < 3
     setIsLoggedIn(!isNotLoggedIn)
+
+    if (!isNotLoggedIn) {
+      const phantom = getProvider()
+      if (phantom) {
+        // Set this to a unique identifier for the user performing the event.
+        mixpanel.identify(account)
+        mixpanel.track('Sign Up', {
+          'User Wallet': account,
+          'Signin Type': phantom?.isPhantom ? "Phantom" : "Social Login"
+        })
+      }
+    }
 
     if (loggedIn && isNotLoggedIn) {
       window.location.reload()
