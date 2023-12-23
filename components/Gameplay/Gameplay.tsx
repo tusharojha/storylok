@@ -15,10 +15,10 @@ import axios from "axios";
 
 import { loks } from './loks.json'
 import { useRouter } from "next/router";
-import { useAccount, useNetwork, useConnectModal, useConnectKit, useParticleConnect, useParticleProvider } from "@particle-network/connect-react-ui";
 import bs58 from 'bs58';
 import { useMediaQuery } from "../helpers/hooks";
 import { PublicKey } from '@solana/web3.js'
+import { useAuth, useProvider } from "@arcana/auth-react";
 
 
 ed.etc.sha512Sync = (...m) => sha512(ed.etc.concatBytes(...m));
@@ -48,9 +48,9 @@ export default function Gameplay({ plot }: GameplayProp) {
 
   const { push } = useRouter()
 
-  const account = useAccount()
+  const { isLoggedIn, connect, user, logout: disconnect, provider } = useAuth()
+  // const { provider } = useProvider()
 
-  const { connect, disconnect } = useParticleConnect();
   const [selectedLok, setLok] = useState<typeof loks[0]>(loks[0])
   const isMobile = useMediaQuery(468)
   const [successModel, setSuccessModel] = useState(false)
@@ -90,17 +90,6 @@ export default function Gameplay({ plot }: GameplayProp) {
   };
 
   const commandInputRef = useRef<HTMLInputElement>(null);
-  const connectKit = useConnectKit();
-  const isParticleActive = connectKit.particle.auth.isLogin();
-
-
-  const getProvider = () => {
-    if (!isParticleActive) {
-      return (window as any).phantom?.solana;
-    }
-    return null;
-  };
-
 
   async function convertTextToSpeech(text: string) {
     if (isMute) return;
@@ -208,16 +197,16 @@ export default function Gameplay({ plot }: GameplayProp) {
   }
 
   const mintNftOnChain = async () => {
-    if (!account || loading) return;
+    if (!user?.address || loading) return;
     try {
       setLoading(true)
-      const phantomProvider = getProvider();
+
 
       // Request message signing from the user.
       // `account` will be null if the wallet isn't connected
-      if (!account) throw new Error('Wallet not connected!');
+      if (!user.address) throw new Error('Wallet not connected!');
 
-      const address = phantomProvider?.isPhantom ? phantomProvider.publicKey.toString() : await connectKit.particle.solana.getAddress();
+      const address = user.address
       const publicKey = new PublicKey(address);
 
       // Encode anything as bytes
@@ -225,17 +214,17 @@ export default function Gameplay({ plot }: GameplayProp) {
       const message = new TextEncoder().encode(msg);
       console.log('hereee')
       // Sign the bytes using the wallet
-      const signature = phantomProvider?.isPhantom ?
-        await phantomProvider.signMessage(message, 'utf8') :
-        await connectKit.particle.solana.signMessage(bs58.encode(message));
+      // const signature = phantomProvider?.isPhantom ?
+      //   await phantomProvider.signMessage(message, 'utf8') :
+      //   await connectKit.particle.solana.signMessage(bs58.encode(message));
 
-      // Verify that the bytes were signed using the private key that matches the known public key
-      if (!ed.verify(phantomProvider?.isPhantom ? signature.signature : signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
+      // // Verify that the bytes were signed using the private key that matches the known public key
+      // if (!ed.verify(phantomProvider?.isPhantom ? signature.signature : signature, message, publicKey.toBytes())) throw new Error('Invalid signature!');
 
       // Prepare NFT Metadata.
       const { hash, json } = await prepareNftMetadata(imageIpfs, baseline.title, baseline.summary, baseline.message, conversation)
 
-      const mint = await mintNftOnWallet(account.toString(), json.description, json.image, json.name, hash)
+      const mint = await mintNftOnWallet(address.toString(), json.description, json.image, json.name, hash)
 
       if (!mint) {
         setLoading(false)

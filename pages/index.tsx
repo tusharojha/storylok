@@ -12,7 +12,7 @@ import { loks } from '@/components/Gameplay/loks.json'
 import Image from 'next/image'
 import mixpanel from 'mixpanel-browser'
 import { useRouter } from 'next/router';
-import { useAccount } from '@particle-network/connect-react-ui';
+import { useAuth } from '@arcana/auth-react';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -32,7 +32,7 @@ const customStyles = {
 };
 
 export default function Home() {
-  const account = useAccount()
+  const { user } = useAuth()
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
   const [startGame, setStartGame] = useState(false);
@@ -64,9 +64,9 @@ export default function Home() {
   }, [])
 
   useEffect(() => {
-    const isNotLoggedIn = account == undefined || account.length < 3
+    const isNotLoggedIn = user == undefined || user?.address.length < 3
     setIsOpen(!isNotLoggedIn)
-  }, [account])
+  }, [user])
 
   const startRandomGame = () => {
     setStartGame(true)
@@ -76,7 +76,7 @@ export default function Home() {
 
     mixpanel.track('Start Game', {
       'isCustomGame': true,
-      'lok': title 
+      'lok': title
     })
     push(`/lok/${title}`)
   }

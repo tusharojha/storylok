@@ -13,8 +13,8 @@ import Image from 'next/image'
 import { useRouter } from 'next/router';
 import dynamic from 'next/dynamic';
 import Gameplay from '@/components/Gameplay/Gameplay';
-import { useAccount } from '@particle-network/connect-react-ui';
 import { ConnectWallet } from '@/components/ConnectWallet';
+import { useAuth } from '@arcana/auth-react';
 
 // Make sure to bind modal to your appElement (https://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#modal');
@@ -39,14 +39,14 @@ export default function Home() {
 
   const { title } = query
 
-  const account = useAccount()
+  const { user } = useAuth()
 
   const [lok, setLok] = useState<string>('')
   const [nfts, setNfts] = useState<any[]>([])
   const [modalIsOpen, setIsOpen] = useState(false);
   const [isInvalid, setIsInvalid] = useState(true);
 
-  const isLoggedIn = account != undefined && account.length > 3
+  const isLoggedIn = user != undefined && user.address.length > 3
 
   function closeModal() {
     setIsOpen(false);

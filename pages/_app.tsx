@@ -9,8 +9,8 @@ import { ParticleAdapter, PhantomWalletAdapter, SolflareWalletAdapter, TrustWall
 import { clusterApiUrl } from '@solana/web3.js';
 
 // Importing particle network libraries.
-import { ModalProvider } from '@particle-network/connect-react-ui'
-import config from '@/components/config'
+import { AuthProvider } from '@arcana/auth'
+import { ProvideAuth } from '@arcana/auth-react'
 
 import mixpanel from 'mixpanel-browser'
 import { useEffect, useMemo } from 'react';
@@ -26,42 +26,29 @@ function MyApp({ Component, pageProps }: AppProps) {
     mixpanel.init(process.env.NEXT_PUBLIC_MIXPANEL ?? '', { track_pageview: true, persistence: 'localStorage' });
   }, [])
 
-  // You can also provide a custom RPC endpoint
-  const endpoint = useMemo(() => clusterApiUrl(network), [network]);
-
-  const wallets = useMemo(
-    () => [
-      new ParticleAdapter(),
-      new PhantomWalletAdapter(),
-    ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [network]
-  );
+  const auth = new AuthProvider(
+    process.env.NEXT_PUBLIC_APP_CLIENT_ID ?? '', // App client ID
+    {
+      position: 'left',         // default: right
+      theme: 'dark',           // default: dark
+      alwaysVisible: false,     // default: true, wallet always visible
+      setWindowProvider: true,  // default: false, window.ethereum not set
+      connectOptions: {
+        compact: true           // default: false, regular plug-and-play login UI
+      },
+      chainConfig: {
+        chainId: '2',                    // defaults to Ethereum
+        rpcUrl: 'https://api.testnet.solana.com', // defaults to 'https://rpc.ankr.com/eth'
+      },
+    })
 
 
   return <>
-    <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={wallets}>
-        <WalletModalProvider>
-          <ModalProvider
-            options={config}
-            theme={'light'}
-            language={'en'}   //optional：localize, default en
-            particleAuthSort={[    //optional：display particle auth items and order
-              'phone',
-              'google',
-              'apple',
-              'twitter'
-            ]}
-          >
-
-            <Header />
-            <Component {...pageProps} />
-            <div id="modal" />
-          </ModalProvider>
-        </WalletModalProvider>
-      </WalletProvider>
-    </ConnectionProvider>
+    <ProvideAuth provider={auth}>
+      <Header />
+      <Component {...pageProps} />
+      <div id="modal" />
+    </ProvideAuth >
   </>
 }
 
